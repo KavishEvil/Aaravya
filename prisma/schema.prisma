@@ -1,0 +1,301 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ConditionCategory {
+  PROCTOLOGY
+  GENERAL_SURGERY
+  UROLOGY
+  PERIPHERAL_VASCULAR
+}
+
+enum AppointmentType {
+  IN_CLINIC
+  TELECONSULT
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum AnonymousCategory {
+  STUDENT
+  WOMAN
+  IT_PROFESSIONAL
+  POLICE_DEFENCE
+  OTHER
+}
+
+enum FunnelStage {
+  AWARENESS
+  CONSIDERATION
+  DECISION
+}
+
+enum InsuranceType {
+  CASHLESS
+  REIMBURSEMENT
+  NONE
+}
+
+enum MediaCategory {
+  HAPPY_FACES
+  INTERIOR
+  SURGERY
+  TESTIMONIAL
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum AdminRole {
+  ADMIN
+}
+
+model Doctor {
+  id                   String   @id @default(cuid())
+  slug                 String   @unique
+  name                 String
+  photoUrl             String?
+  qualifications       String
+  designation          String
+  registrationNumber   String?
+  yearsExperience       Int?
+  surgeriesCount       Int?
+  specializations      String[]
+  bioParagraphs        String[]
+  philosophy           String?
+  testimonialVideoUrl  String?
+  facebookUrl          String?
+  instagramUrl         String?
+  linkedinUrl          String?
+  phone                String?
+  isFeatured           Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  reviewedConditions Condition[]
+  procedures         Procedure[]
+  testimonials       Testimonial[]
+  blogPosts          BlogPost[]
+  appointments       Appointment[]
+}
+
+model Condition {
+  id                String            @id @default(cuid())
+  slug              String            @unique
+  name              String
+  category          ConditionCategory
+  heroImageUrl      String?
+  seoTitle          String?
+  metaDescription   String?
+  directAnswer      String
+  introText         String?
+  definitionHeading String?
+  definitionText    String?
+  symptoms          String[]
+  causes            String?
+  diagnosisProcess  String?
+  treatmentOptions  Json?
+  whyChooseUsPoints String[]
+  recoveryInfo      String?
+  closingHeading    String?
+  closingText       String?
+
+  reviewedByDoctorId String?
+  reviewedByDoctor   Doctor?  @relation(fields: [reviewedByDoctorId], references: [id])
+  lastUpdatedAt      DateTime @updatedAt
+  createdAt          DateTime @default(now())
+
+  procedures         Procedure[]
+  faqs               Faq[]
+  testimonials       Testimonial[]
+  appointments       Appointment[]
+  locationPages      LocationLandingPage[]
+  costEstimatorRules CostEstimatorRule[]
+  symptomSessions    SymptomCheckSession[]
+}
+
+model Procedure {
+  id                  String    @id @default(cuid())
+  slug                String    @unique
+  name                String
+  conditionId         String
+  condition           Condition @relation(fields: [conditionId], references: [id])
+  doctorId            String?
+  doctor              Doctor?   @relation(fields: [doctorId], references: [id])
+  description         String
+  duration            String?
+  anesthesiaType      String?
+  hospitalStay        String?
+  recoveryTimeline    Json?
+  successRate         String?
+  costMin             Int?
+  costMax             Int?
+  downloadablePdfUrl  String?
+  lastUpdatedAt       DateTime  @updatedAt
+  createdAt           DateTime  @default(now())
+
+  costEstimatorRules CostEstimatorRule[]
+}
+
+model LocationLandingPage {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  conditionId     String
+  condition       Condition @relation(fields: [conditionId], references: [id])
+  city            String
+  keywordVariant  String?
+  seoTitle        String?
+  metaDescription String?
+  paragraphs      String[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Faq {
+  id          String     @id @default(cuid())
+  question    String
+  answer      String
+  conditionId String?
+  condition   Condition? @relation(fields: [conditionId], references: [id])
+  topic       String?
+  pageContext String     @default("faqs-page")
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Testimonial {
+  id                String             @id @default(cuid())
+  patientName       String?
+  initials          String?
+  quote             String?
+  rating            Int?
+  imageUrl          String?
+  videoUrl          String?
+  conditionId       String?
+  condition         Condition?         @relation(fields: [conditionId], references: [id])
+  doctorId          String?
+  doctor            Doctor?            @relation(fields: [doctorId], references: [id])
+  anonymousCategory AnonymousCategory?
+  isFeatured        Boolean            @default(false)
+  isApproved        Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+}
+
+model MediaItem {
+  id        String        @id @default(cuid())
+  type      MediaType
+  category  MediaCategory
+  url       String?
+  youtubeId String?
+  caption   String?
+  sortOrder Int           @default(0)
+  createdAt DateTime      @default(now())
+}
+
+model Appointment {
+  id                String             @id @default(cuid())
+  name              String?
+  nickname          String?
+  phone             String
+  email             String?
+  preferredDate     DateTime?
+  preferredTimeSlot String?
+  type              AppointmentType
+  conditionId       String?
+  condition         Condition?         @relation(fields: [conditionId], references: [id])
+  doctorId          String?
+  doctor            Doctor?            @relation(fields: [doctorId], references: [id])
+  isAnonymous       Boolean            @default(false)
+  anonymousCategory AnonymousCategory?
+  status            AppointmentStatus  @default(PENDING)
+  notes             String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  symptomSession SymptomCheckSession?
+}
+
+model SymptomCheckSession {
+  id                     String       @id @default(cuid())
+  answers                Json
+  urgencyResult          String
+  conditionGuessId       String?
+  conditionGuess         Condition?   @relation(fields: [conditionGuessId], references: [id])
+  resultingAppointmentId String?      @unique
+  resultingAppointment   Appointment? @relation(fields: [resultingAppointmentId], references: [id])
+  createdAt              DateTime     @default(now())
+}
+
+model BlogPost {
+  id                 String      @id @default(cuid())
+  slug               String      @unique
+  title              String
+  funnelStage        FunnelStage
+  body               String
+  excerpt            String?
+  heroImageUrl       String?
+  tags               String[]
+  reviewedByDoctorId String?
+  reviewedByDoctor   Doctor?     @relation(fields: [reviewedByDoctorId], references: [id])
+  isPublished        Boolean     @default(false)
+  lastUpdatedAt      DateTime    @updatedAt
+  createdAt          DateTime    @default(now())
+}
+
+model CostEstimatorRule {
+  id            String        @id @default(cuid())
+  procedureId   String
+  procedure     Procedure     @relation(fields: [procedureId], references: [id])
+  conditionId   String?
+  condition     Condition?    @relation(fields: [conditionId], references: [id])
+  city          String
+  insuranceType InsuranceType
+  costMin       Int
+  costMax       Int
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Location {
+  id                String   @id @default(cuid())
+  name              String
+  address           String
+  phone             String
+  whatsapp          String?
+  email             String?
+  mapEmbedUrl       String?
+  hours             String?
+  googleBusinessUrl String?
+  isPrimary         Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String?
+  role         AdminRole @default(ADMIN)
+  createdAt    DateTime  @default(now())
+}

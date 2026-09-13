@@ -1,0 +1,46 @@
+[
+  {
+    "slug": "dr-deep-prajapati",
+    "name": "Dr. Deep Prajapati",
+    "photoUrl": "assets/img/team/dr-deep.png",
+    "qualifications": "B.A.M.S., M.S",
+    "designation": "Consultant Proctologist & General Surgeon",
+    "registrationNumber": null,
+    "yearsExperience": 5,
+    "surgeriesCount": 1000,
+    "specializations": ["Proctology", "General Surgery"],
+    "bioParagraphs": [
+      "Dr. Deep Prajapati is a highly skilled Consultant Proctologist and General Surgeon with over 5 years of clinical experience and a proven track record of performing 1000+ successful surgeries.",
+      "With a unique blend of modern surgical expertise and authentic Ayurvedic healing principles, Dr. Prajapati specializes in the treatment of anorectal and general surgical diseases—including piles, fissures, fistula, pilonidal sinus, and other chronic surgical conditions.",
+      "His approach combines the precision of modern medical science with the holistic wisdom of Ayurveda, ensuring faster recovery, minimal recurrence, and long-lasting wellness for every patient.",
+      "Known for his compassionate care and dedication to patient well-being, Dr. Prajapati believes in treating not just the disease, but the person as a whole—physically, mentally, and emotionally."
+    ],
+    "philosophy": "Known for his compassionate care and dedication to patient well-being, Dr. Prajapati believes in treating not just the disease, but the person as a whole—physically, mentally, and emotionally.",
+    "phone": "+918733889957",
+    "facebookUrl": null,
+    "instagramUrl": null,
+    "linkedinUrl": null,
+    "isFeatured": true
+  },
+  {
+    "slug": "dr-dipti-prajapati",
+    "name": "Dr. Dipti Prajapati",
+    "photoUrl": "assets/img/team/dr-dipti.png",
+    "qualifications": "B.A.M.S., C.K.S.T.",
+    "designation": "Ayurveda Procto & Gynaecologist",
+    "registrationNumber": null,
+    "yearsExperience": null,
+    "surgeriesCount": null,
+    "specializations": ["Proctology", "Gynaecology"],
+    "bioParagraphs": [
+      "Dr. Dipti Prajapati, Consultant Proctologist and Women’s Health Specialist, leads Aaravya Hospital with a deep commitment to women’s well-being. She specializes in the diagnosis and treatment of piles, fissures, fistula, and post-pregnancy anorectal conditions, helping women regain comfort and confidence in their daily lives.",
+      "With her empathetic approach and years of clinical experience, Dr. Dipti ensures that every patient feels heard, understood, and supported throughout their healing journey."
+    ],
+    "philosophy": "With her empathetic approach and years of clinical experience, Dr. Dipti ensures that every patient feels heard, understood, and supported throughout their healing journey.",
+    "phone": "+918733889957",
+    "facebookUrl": null,
+    "instagramUrl": null,
+    "linkedinUrl": null,
+    "isFeatured": true
+  }
+]

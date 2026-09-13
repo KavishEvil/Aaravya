@@ -1,0 +1,52 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://aaravya:aaravya_local_pw@db:5432/aaravya
+      NEXTAUTH_SECRET: dev-only-secret-change-before-any-real-deploy
+      NEXTAUTH_URL: http://localhost:3000
+      SMTP_HOST: mailhog
+      SMTP_PORT: "1025"
+      SMTP_FROM: "Aaravya Hospital <no-reply@aaravyahospital.local>"
+    volumes:
+      - ./:/app
+      - app_next_cache:/app/.next
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aaravya
+      POSTGRES_USER: aaravya
+      POSTGRES_PASSWORD: aaravya_local_pw
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aaravya -d aaravya"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    restart: unless-stopped
+    ports:
+      - "8026:8025" # web UI
+      - "1026:1025" # SMTP
+
+volumes:
+  db_data:
+  app_node_modules:
+  app_next_cache:
+  app_prisma_client:

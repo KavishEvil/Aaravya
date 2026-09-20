@@ -6,7 +6,10 @@ import { DeleteButton } from "@/components/admin/delete-button";
 import { deleteFaq } from "./actions";
 
 export default async function AdminFaqsPage() {
-  const faqs = await prisma.faq.findMany({ orderBy: [{ pageContext: "asc" }, { sortOrder: "asc" }] });
+  const faqs = await prisma.faq.findMany({
+    orderBy: [{ pageContext: "asc" }, { sortOrder: "asc" }],
+    select: { id: true, question: true, pageContext: true },
+  });
 
   return (
     <div>
@@ -14,7 +17,7 @@ export default async function AdminFaqsPage() {
       <AdminTable
         columns={["Question", "Page", ""]}
         rows={faqs.map((f) => [
-          <Link key="q" href={`/admin/faqs/${f.id}`} className="font-medium hover:text-brand line-clamp-1">
+          <Link key="q" href={`/admin/faqs/${f.id}`} className="font-medium hover:text-primary line-clamp-1">
             {f.question}
           </Link>,
           f.pageContext,

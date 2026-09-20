@@ -35,6 +35,11 @@ export function BlogForm({
         <input id="excerpt" name="excerpt" defaultValue={post?.excerpt ?? ""} className={ADMIN_INPUT_CLASS} />
       </Field>
 
+      {/* Plain text today (Tiptap is installed but not wired in anywhere in
+          this codebase). If this field is ever upgraded to a Tiptap rich-text
+          editor whose output gets rendered as HTML on the public site,
+          sanitize it server-side (e.g. with a library like `isomorphic-dompurify`)
+          before rendering — never trust editor-produced HTML directly. */}
       <Field label="Body" htmlFor="body">
         <Textarea id="body" name="body" rows={10} required defaultValue={post?.body} />
       </Field>
@@ -63,7 +68,7 @@ export function BlogForm({
         Published (visible on site)
       </label>
 
-      <Button type="submit" size="xl" className="mt-2 bg-brand text-brand-foreground hover:bg-brand/90">
+      <Button type="submit" size="xl" className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90">
         Save Article
       </Button>
     </form>

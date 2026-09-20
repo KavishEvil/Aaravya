@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { PageHero } from "@/components/site/page-hero";
+import { Reveal, RevealGroup, RevealItem } from "@/components/site/reveal";
 import { getConditionsGroupedByCategory } from "@/lib/queries";
 
 export const metadata: Metadata = {
@@ -13,37 +15,38 @@ export default async function ConditionsPage() {
   const groups = await getConditionsGroupedByCategory();
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-16">
-      <div className="mx-auto max-w-2xl text-center">
-        <h1 className="font-heading text-4xl font-semibold text-balance">
-          Conditions &amp; Treatments
-        </h1>
-        <p className="mt-3 text-muted-foreground">
-          From non-surgical management to laser and surgical care — browse by
-          specialty to find the right treatment page.
-        </p>
-      </div>
+    <div>
+      <PageHero
+        eyebrow="Specialties"
+        title="Conditions & Treatments"
+        description="From non-surgical management to laser and surgical care — browse by specialty to find the right treatment page."
+      />
 
-      <div className="mt-14 flex flex-col gap-14">
-        {groups.map((group) => (
-          <div key={group.category}>
-            <h2 className="font-heading text-2xl font-semibold">{group.label}</h2>
-            <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {group.conditions.map((c) => (
-                <Link
-                  key={c.slug}
-                  href={`/conditions/${c.slug}`}
-                  className="group rounded-xl border border-border bg-card p-5 transition-colors hover:border-brand hover:bg-accent"
-                >
-                  <p className="font-heading font-medium text-card-foreground">{c.name}</p>
-                  <span className="mt-2 inline-flex items-center gap-1 text-xs text-brand opacity-0 transition-opacity group-hover:opacity-100">
-                    View treatment <ArrowRight className="size-3" />
-                  </span>
-                </Link>
-              ))}
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16">
+        <div className="flex flex-col gap-14">
+          {groups.map((group) => (
+            <div key={group.category}>
+              <Reveal>
+                <h2 className="font-heading text-2xl font-semibold text-forest-900">{group.label}</h2>
+              </Reveal>
+              <RevealGroup className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {group.conditions.map((c) => (
+                  <RevealItem key={c.slug}>
+                    <Link
+                      href={`/conditions/${c.slug}`}
+                      className="group flex h-full flex-col justify-center rounded-xl border border-border bg-card p-5 shadow-soft-sm transition-all hover:-translate-y-0.5 hover:border-forest-300 hover:shadow-soft-md"
+                    >
+                      <p className="font-heading font-medium text-card-foreground">{c.name}</p>
+                      <span className="mt-2 inline-flex items-center gap-1 text-xs text-terracotta-700 opacity-0 transition-opacity group-hover:opacity-100">
+                        View treatment <ArrowRight className="size-3" />
+                      </span>
+                    </Link>
+                  </RevealItem>
+                ))}
+              </RevealGroup>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

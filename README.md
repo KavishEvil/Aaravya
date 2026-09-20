@@ -153,3 +153,4 @@ Admin panel: `http://localhost:3000/admin` (seeded credentials documented in `pr
 - [ ] Admin login works; editing content reflects immediately on the public site
 - [ ] `sitemap.xml` / `robots.txt` generated and correct
 - [ ] `tsc --noEmit` and lint pass
+- [ ] Before any real deployment: seeded admin password (`admin@aaravyahospital.com` / `ChangeMe123!`) rotated, `NEXTAUTH_SECRET` regenerated, and `.env` values point at real production DB/SMTP (see `.env.example`)

@@ -1,8 +1,8 @@
 import Script from "next/script";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { ChatWidgetLoader } from "@/components/chat-widget-loader";
 import { JsonLd } from "@/components/json-ld";
+import { ChatWidgetLoader } from "@/components/chat-widget-loader";
 import { organizationSchema } from "@/lib/schema";
 import { getPrimaryLocation, getSiteSettings } from "@/lib/queries";
 
@@ -46,7 +46,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <SiteHeader />
       <div className="flex-1">{children}</div>
       <SiteFooter />
-      <ChatWidgetLoader />
+      <ChatWidgetLoader phone={settings.phone ?? "+91 87338 89957"} whatsapp={settings.whatsapp ?? "918733889957"} />
     </>
   );
 }

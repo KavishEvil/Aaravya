@@ -16,17 +16,26 @@ export async function SiteHeader() {
   const whatsapp = settings.whatsapp ?? "918733889957";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
-      <div className="hidden items-center justify-end gap-4 border-b border-border/60 bg-muted/40 px-6 py-1.5 text-xs text-muted-foreground lg:flex">
-        <a href={`https://wa.me/${whatsapp}`} className="flex items-center gap-1 hover:text-foreground">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/85">
+      <div className="hidden items-center justify-end gap-5 border-b border-border/70 bg-forest-50 px-6 py-1.5 text-xs text-forest-800 lg:flex">
+        <a
+          href={`https://wa.me/${whatsapp}`}
+          className="flex items-center gap-1.5 transition-colors hover:text-terracotta-700"
+        >
           <MessageCircle className="size-3.5" /> WhatsApp Us
         </a>
-        <a href={`tel:${phone}`} className="flex items-center gap-1 hover:text-foreground">
+        <span className="text-forest-300" aria-hidden>
+          |
+        </span>
+        <a
+          href={`tel:${phone}`}
+          className="flex items-center gap-1.5 transition-colors hover:text-terracotta-700"
+        >
           <Phone className="size-3.5" /> {phone}
         </a>
       </div>
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-5">
-        <Link href="/">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 sm:py-5">
+        <Link href="/" className="shrink-0" aria-label="Aaravya Hospital home">
           <Wordmark />
         </Link>
         <SiteNav conditionGroups={conditionGroups} doctors={doctors} phone={phone} />
@@ -34,7 +43,7 @@ export async function SiteHeader() {
           size="lg"
           nativeButton={false}
           render={<Link href="/book" />}
-          className="hidden bg-brand text-brand-foreground hover:bg-brand/90 lg:inline-flex"
+          className="hidden shrink-0 bg-brand text-brand-foreground shadow-soft-sm transition-colors hover:bg-terracotta-700 lg:inline-flex"
         >
           Book an Appointment
         </Button>

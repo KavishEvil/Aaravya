@@ -7,8 +7,15 @@ import { deleteCostRule } from "./actions";
 
 export default async function AdminCostRulesPage() {
   const rules = await prisma.costEstimatorRule.findMany({
-    include: { procedure: true },
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      city: true,
+      insuranceType: true,
+      costMin: true,
+      costMax: true,
+      procedure: { select: { name: true } },
+    },
   });
 
   return (
@@ -17,7 +24,7 @@ export default async function AdminCostRulesPage() {
       <AdminTable
         columns={["Procedure", "City", "Insurance", "Range", ""]}
         rows={rules.map((r) => [
-          <Link key="p" href={`/admin/cost-rules/${r.id}`} className="font-medium hover:text-brand">
+          <Link key="p" href={`/admin/cost-rules/${r.id}`} className="font-medium hover:text-primary">
             {r.procedure.name}
           </Link>,
           r.city,

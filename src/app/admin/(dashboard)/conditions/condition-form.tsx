@@ -121,7 +121,7 @@ export function ConditionForm({
         </select>
       </Field>
 
-      <Button type="submit" size="xl" className="mt-2 bg-brand text-brand-foreground hover:bg-brand/90">
+      <Button type="submit" size="xl" className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90">
         Save Condition
       </Button>
     </form>

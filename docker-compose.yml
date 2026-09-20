@@ -16,6 +16,7 @@ services:
       SMTP_FROM: "Aaravya Hospital <no-reply@aaravyahospital.local>"
     volumes:
       - ./:/app
+      - app_node_modules:/app/node_modules
       - app_next_cache:/app/.next
     depends_on:
       db:
@@ -29,7 +30,7 @@ services:
       POSTGRES_USER: aaravya
       POSTGRES_PASSWORD: aaravya_local_pw
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:

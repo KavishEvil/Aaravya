@@ -66,7 +66,7 @@ export function CostRuleForm({
         <Textarea id="notes" name="notes" rows={2} defaultValue={rule?.notes ?? ""} />
       </Field>
 
-      <Button type="submit" size="xl" className="mt-2 bg-brand text-brand-foreground hover:bg-brand/90">
+      <Button type="submit" size="xl" className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90">
         Save Rule
       </Button>
     </form>

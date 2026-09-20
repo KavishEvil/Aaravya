@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHero } from "@/components/site/page-hero";
 import { prisma } from "@/lib/prisma";
 import { BookingForm } from "./booking-form";
 
@@ -26,15 +27,13 @@ export default async function BookPage({
   ]);
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-16">
-      <div className="text-center">
-        <h1 className="font-heading text-4xl font-semibold text-balance">Book an Appointment</h1>
-        <p className="mt-3 text-muted-foreground">
-          Tell us a little about what you need — our coordinator will call to confirm your slot.
-        </p>
-      </div>
-
-      <div className="mt-10">
+    <div>
+      <PageHero
+        eyebrow="Appointments"
+        title="Book an Appointment"
+        description="Tell us a little about what you need — our coordinator will call to confirm your slot."
+      />
+      <div className="mx-auto max-w-2xl px-4 py-14 sm:px-6 sm:py-16">
         <BookingForm
           conditions={conditions}
           doctors={doctors}

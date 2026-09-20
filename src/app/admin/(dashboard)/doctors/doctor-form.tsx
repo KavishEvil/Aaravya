@@ -1,6 +1,7 @@
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, ADMIN_INPUT_CLASS } from "@/components/admin/form";
+import { ImageUploadField } from "@/components/admin/image-upload-field";
+import { AdminSubmitButton } from "@/components/admin/submit-button";
 import type { Doctor } from "@/generated/prisma";
 
 export function DoctorForm({
@@ -42,9 +43,12 @@ export function DoctorForm({
         </Field>
       </div>
 
-      <Field label="Photo Path" htmlFor="photoUrl" help="Relative path under legacy-assets, e.g. assets/img/team/dr-deep.png">
-        <input id="photoUrl" name="photoUrl" defaultValue={doctor?.photoUrl ?? ""} className={ADMIN_INPUT_CLASS} />
-      </Field>
+      <ImageUploadField
+        name="photoUrl"
+        label="Doctor Photo"
+        currentImageUrl={doctor?.photoUrl}
+        help="JPEG, PNG, or WebP. Max 8MB — square images work best."
+      />
 
       <div className="grid gap-5 sm:grid-cols-3">
         <Field label="Registration No." htmlFor="registrationNumber">
@@ -117,9 +121,9 @@ export function DoctorForm({
         Featured (shown on homepage)
       </label>
 
-      <Button type="submit" size="xl" className="mt-2 bg-brand text-brand-foreground hover:bg-brand/90">
+      <AdminSubmitButton size="xl" className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90">
         Save Doctor
-      </Button>
+      </AdminSubmitButton>
     </form>
   );
 }

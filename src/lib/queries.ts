@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { ConditionCategory } from "@/generated/prisma";
 
@@ -33,7 +34,14 @@ export async function getAllConditionSlugs() {
   return conditions.map((c) => c.slug);
 }
 
-export async function getConditionBySlug(slug: string) {
+/**
+ * Wrapped in React's `cache()` because this is called once from
+ * `generateMetadata` and once from the page component for the same request —
+ * without this, every visit to a condition page ran the (fairly heavy)
+ * query, with its `procedures`/`faqs`/`reviewedByDoctor` includes, twice.
+ * `cache()` dedupes calls with the same arguments within a single render.
+ */
+export const getConditionBySlug = cache(async (slug: string) => {
   return prisma.condition.findUnique({
     where: { slug },
     include: {
@@ -42,30 +50,32 @@ export async function getConditionBySlug(slug: string) {
       faqs: { orderBy: { sortOrder: "asc" } },
     },
   });
-}
+});
 
 export async function getAllDoctors() {
   return prisma.doctor.findMany({ orderBy: { isFeatured: "desc" } });
 }
 
-export async function getDoctorBySlug(slug: string) {
+/** See `getConditionBySlug` — same generateMetadata + page double-fetch fix. */
+export const getDoctorBySlug = cache(async (slug: string) => {
   return prisma.doctor.findUnique({
     where: { slug },
     include: { reviewedConditions: true, procedures: true },
   });
-}
+});
 
 export async function getAllProcedureSlugs() {
   const procedures = await prisma.procedure.findMany({ select: { slug: true } });
   return procedures.map((p) => p.slug);
 }
 
-export async function getProcedureBySlug(slug: string) {
+/** See `getConditionBySlug` — same generateMetadata + page double-fetch fix. */
+export const getProcedureBySlug = cache(async (slug: string) => {
   return prisma.procedure.findUnique({
     where: { slug },
     include: { condition: true, doctor: true },
   });
-}
+});
 
 export async function getFaqs(pageContext?: string) {
   return prisma.faq.findMany({
@@ -85,7 +95,15 @@ export async function getPrimaryLocation() {
   return prisma.location.findFirst({ where: { isPrimary: true } });
 }
 
-export async function getSiteSettings() {
+/**
+ * Wrapped in `cache()` too: this is fetched independently in
+ * `(site)/layout.tsx` (for the org JSON-LD + analytics IDs + header/footer)
+ * and, previously, again inside the chat widget's data loader — the widget
+ * has since been changed to receive settings as a prop instead of
+ * re-fetching, but `cache()` is kept here as a safety net for any future
+ * caller that also needs settings within the same request.
+ */
+export const getSiteSettings = cache(async () => {
   const rows = await prisma.siteSetting.findMany();
   return Object.fromEntries(rows.map((r) => [r.key, r.value])) as Record<string, string>;
-}
+});

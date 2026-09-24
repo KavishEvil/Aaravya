@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { legacyAsset } from "@/lib/assets";
 import { PageHero } from "@/components/site/page-hero";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/reveal";
 import { getConditionsGroupedByCategory } from "@/lib/queries";
@@ -34,10 +36,21 @@ export default async function ConditionsPage() {
                   <RevealItem key={c.slug}>
                     <Link
                       href={`/conditions/${c.slug}`}
-                      className="group flex h-full flex-col justify-center rounded-xl border border-border bg-card p-5 shadow-soft-sm transition-all hover:-translate-y-0.5 hover:border-forest-300 hover:shadow-soft-md"
+                      className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-soft-sm transition-all hover:-translate-y-0.5 hover:border-forest-300 hover:shadow-soft-md"
                     >
-                      <p className="font-heading font-medium text-card-foreground">{c.name}</p>
-                      <span className="mt-2 inline-flex items-center gap-1 text-xs text-terracotta-700 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="relative aspect-[4/3] bg-forest-50">
+                        {legacyAsset(c.heroImageUrl) && (
+                          <Image
+                            src={legacyAsset(c.heroImageUrl)!}
+                            alt={c.name}
+                            fill
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px"
+                            className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
+                          />
+                        )}
+                      </div>
+                      <p className="px-5 pt-4 font-heading font-medium text-card-foreground">{c.name}</p>
+                      <span className="mx-5 mb-4 mt-2 inline-flex items-center gap-1 text-xs text-terracotta-700 opacity-0 transition-opacity group-hover:opacity-100">
                         View treatment <ArrowRight className="size-3" />
                       </span>
                     </Link>

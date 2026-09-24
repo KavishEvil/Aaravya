@@ -112,6 +112,20 @@ All tables were returned to their baseline and all buckets were left empty after
 - **Font:** embedded Inter (SIL OFL 1.1, licence in `src/assets/fonts/OFL.txt`), because the standard PDF fonts have no ₹ glyph. The font files are traced into the standalone and Vercel output via `outputFileTracingIncludes`.
 - **Verified by text extraction:** 2 pages, all 21 rows, ₹ rendering correctly. A visual check wasn't possible, because the browser pane downloads PDFs instead of displaying them. **Please open the PDF once to review the layout.**
 
+### Navigation: Health Library and Surgical Techniques
+
+- **Health Library** → the existing `/blog`, added to the desktop and mobile nav.
+- **Surgical Techniques → a regrouped Procedures view at `/treatments`** (my call, as delegated). `/treatments` had no index page (it returned 404), so the 21 existing procedure pages could only be reached from inside condition pages. The new page lists every procedure, grouped by specialty, and links to its detail page.
+  - I chose this over a new standalone page because it reuses real, already-reviewed content and invents no clinical copy.
+  - Where a procedure has no image of its own (none do yet), its card shows the condition's photo.
+  - Added to the sitemap.
+- **Layout fix found in testing.** With 8 links, the desktop bar overflowed at 1024px: the Book button was pushed off-screen and a horizontal scrollbar appeared. The full bar now starts at 1280px (`xl`). Between 1024 and 1279px the menu button is shown, with the Book button still visible. Verified at 375, 1024 and 1280px.
+
+### Disease / condition photos
+
+- **Nothing was missing.** I checked all 21 conditions: every one has a real image in `public/legacy-assets/img/treatment/` (the files carried over from the original site). None needed a placeholder.
+- The gap was that photos appeared only on each condition's own page. They're now also shown on the homepage condition cards, the `/conditions` listing, and the new Surgical Techniques cards.
+
 ### Development-environment notes (not bugs in the app)
 
 - **Docker file-watch staleness.** This caused the recurring "stale module" problems since Part 2. Next's own docs say Docker Desktop on Windows "can delay or fail to propagate filesystem events" from a Windows-hosted bind mount. The fixes are environment choices: run `npm run dev` on the host, keep the project inside WSL 2, or use Docker Desktop synchronized file shares. Restarting the container is a workaround.

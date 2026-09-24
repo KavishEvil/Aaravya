@@ -28,6 +28,16 @@ type ConditionGroup = {
 
 type Doctor = { slug: string; name: string };
 
+/** Top-level links after the Treatments menu, shared by the desktop and mobile navs. */
+const LINKS = [
+  { href: "/treatments", label: "Surgical Techniques" },
+  { href: "/gallery", label: "Gallery" },
+  { href: "/blog", label: "Health Library" },
+  { href: "/faqs", label: "FAQs" },
+  { href: "/testimonials", label: "Testimonials" },
+  { href: "/contact", label: "Contact" },
+];
+
 export function SiteNav({
   conditionGroups,
   doctors,
@@ -40,7 +50,7 @@ export function SiteNav({
   return (
     <>
       {/* Desktop nav */}
-      <NavigationMenu className="hidden lg:flex">
+      <NavigationMenu className="hidden xl:flex">
         <NavigationMenuList className="gap-1">
           <NavigationMenuItem>
             <NavigationMenuLink
@@ -78,38 +88,16 @@ export function SiteNav({
               </div>
             </NavigationMenuContent>
           </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              render={<Link href="/gallery" />}
-              className="text-[0.95rem] font-medium text-foreground/85 hover:text-forest-800"
-            >
-              Gallery
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              render={<Link href="/faqs" />}
-              className="text-[0.95rem] font-medium text-foreground/85 hover:text-forest-800"
-            >
-              FAQs
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              render={<Link href="/testimonials" />}
-              className="text-[0.95rem] font-medium text-foreground/85 hover:text-forest-800"
-            >
-              Testimonials
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              render={<Link href="/contact" />}
-              className="text-[0.95rem] font-medium text-foreground/85 hover:text-forest-800"
-            >
-              Contact
-            </NavigationMenuLink>
-          </NavigationMenuItem>
+          {LINKS.map((link) => (
+            <NavigationMenuItem key={link.href}>
+              <NavigationMenuLink
+                render={<Link href={link.href} />}
+                className="whitespace-nowrap text-[0.95rem] font-medium text-foreground/85 hover:text-forest-800"
+              >
+                {link.label}
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          ))}
         </NavigationMenuList>
       </NavigationMenu>
 
@@ -120,7 +108,7 @@ export function SiteNav({
             <Button
               variant="ghost"
               size="icon"
-              className="text-forest-800 hover:bg-forest-50 lg:hidden"
+              className="text-forest-800 hover:bg-forest-50 xl:hidden"
             />
           }
         >
@@ -157,18 +145,15 @@ export function SiteNav({
                 ))}
               </div>
             ))}
-            <Link href="/gallery" className="mt-2 rounded-lg p-2.5 font-medium hover:bg-forest-50">
-              Gallery
-            </Link>
-            <Link href="/faqs" className="rounded-lg p-2.5 font-medium hover:bg-forest-50">
-              FAQs
-            </Link>
-            <Link href="/testimonials" className="rounded-lg p-2.5 font-medium hover:bg-forest-50">
-              Testimonials
-            </Link>
-            <Link href="/contact" className="rounded-lg p-2.5 font-medium hover:bg-forest-50">
-              Contact
-            </Link>
+            {LINKS.map((link, i) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`rounded-lg p-2.5 font-medium hover:bg-forest-50 ${i === 0 ? "mt-2" : ""}`}
+              >
+                {link.label}
+              </Link>
+            ))}
             {doctors.length > 0 && (
               <>
                 <p className="mt-3 px-2.5 font-heading text-xs font-semibold uppercase tracking-wide text-terracotta-700">

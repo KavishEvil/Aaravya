@@ -114,9 +114,20 @@ export default async function Home() {
             <RevealItem key={c.slug}>
               <Link
                 href={`/conditions/${c.slug}`}
-                className="group flex h-full flex-col justify-center rounded-2xl border border-border bg-card p-5 text-center shadow-soft-sm transition-all hover:-translate-y-0.5 hover:border-forest-300 hover:shadow-soft-md"
+                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card pb-5 text-center shadow-soft-sm transition-all hover:-translate-y-0.5 hover:border-forest-300 hover:shadow-soft-md"
               >
-                <p className="font-heading font-medium text-card-foreground">{c.name}</p>
+                <div className="relative mb-4 aspect-[4/3] bg-forest-50">
+                  {legacyAsset(c.heroImageUrl) && (
+                    <Image
+                      src={legacyAsset(c.heroImageUrl)!}
+                      alt={c.name}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px"
+                      className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
+                    />
+                  )}
+                </div>
+                <p className="px-4 font-heading font-medium text-card-foreground">{c.name}</p>
                 <span className="mt-2 inline-flex items-center justify-center gap-1 text-xs text-terracotta-700 opacity-0 transition-opacity group-hover:opacity-100">
                   Learn more <ArrowRight className="size-3" />
                 </span>

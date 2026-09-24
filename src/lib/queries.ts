@@ -70,6 +70,25 @@ export const getDoctorBySlug = cache(async (slug: string) => {
   });
 });
 
+/** Every procedure grouped by its condition's specialty, for the Surgical Techniques page. */
+export async function getProceduresGroupedByCategory() {
+  const procedures = await prisma.procedure.findMany({
+    orderBy: [{ condition: { name: "asc" } }, { name: "asc" }],
+    select: {
+      slug: true,
+      name: true,
+      description: true,
+      imageUrl: true,
+      condition: { select: { slug: true, name: true, category: true, heroImageUrl: true } },
+    },
+  });
+  return CATEGORY_ORDER.map((category) => ({
+    category,
+    label: CATEGORY_LABELS[category],
+    procedures: procedures.filter((p) => p.condition.category === category),
+  })).filter((group) => group.procedures.length > 0);
+}
+
 export async function getAllProcedureSlugs() {
   const procedures = await prisma.procedure.findMany({ select: { slug: true } });
   return procedures.map((p) => p.slug);

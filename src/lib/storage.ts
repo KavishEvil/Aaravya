@@ -132,32 +132,39 @@ export async function deleteImage(key: string | null | undefined): Promise<void>
 }
 
 /**
- * Resolves an `ImageUploadField` submission (a `File` under `field`, plus a
- * `${field}__remove` flag) into the value to persist. A newly-picked file
- * wins, then an explicit removal, otherwise `previousUrl` is kept. The
- * replaced file is deleted from storage. Throws `ImageValidationError` for a
- * bad file, which `adminAction` turns into a message on the form.
+ * Saves a record together with its `ImageUploadField` submission (a `File`
+ * under `field`, plus a `${field}__remove` flag). A newly-picked file wins,
+ * then an explicit removal, otherwise `previousUrl` is kept.
+ *
+ * `write` receives the image URL to persist. The previous file is only
+ * deleted after `write` succeeds, and a freshly uploaded file is deleted if
+ * it fails — so a rejected save (e.g. a duplicate slug) neither orphans the
+ * new upload nor leaves the record pointing at a deleted image.
+ *
+ * Throws `ImageValidationError` for a bad file, before anything is written.
  */
-export async function resolveImageUpload(
+export async function saveWithImage(
   formData: FormData,
   field: string,
   bucket: string,
-  previousUrl: string | null
-): Promise<string | null> {
+  previousUrl: string | null,
+  write: (imageUrl: string | null) => Promise<void>
+): Promise<void> {
   const file = formData.get(field);
   const hasNewFile = file instanceof File && file.size > 0;
   const removeRequested = formData.get(`${field}__remove`) === "1";
 
-  if (hasNewFile) {
-    const uploaded = await uploadImage(file, bucket);
-    await deleteImage(keyFromUrl(previousUrl));
-    return uploaded.url;
+  let imageUrl = previousUrl;
+  if (hasNewFile) imageUrl = (await uploadImage(file, bucket)).url;
+  else if (removeRequested) imageUrl = null;
+
+  try {
+    await write(imageUrl);
+  } catch (err) {
+    if (hasNewFile) await deleteImage(keyFromUrl(imageUrl));
+    throw err;
   }
-  if (removeRequested) {
-    await deleteImage(keyFromUrl(previousUrl));
-    return null;
-  }
-  return previousUrl;
+  if (imageUrl !== previousUrl) await deleteImage(keyFromUrl(previousUrl));
 }
 
 /**

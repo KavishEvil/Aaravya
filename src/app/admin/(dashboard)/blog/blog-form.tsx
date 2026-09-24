@@ -1,4 +1,6 @@
-import { Button } from "@/components/ui/button";
+import { AdminForm } from "@/components/admin/admin-form";
+import { AdminSubmitButton } from "@/components/admin/submit-button";
+import type { FormState } from "@/lib/admin/actions";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, ADMIN_INPUT_CLASS } from "@/components/admin/form";
 import { ImageUploadField } from "@/components/admin/image-upload-field";
@@ -9,12 +11,12 @@ export function BlogForm({
   post,
   doctors,
 }: {
-  action: (formData: FormData) => Promise<void>;
+  action: (state: FormState, formData: FormData) => Promise<FormState>;
   post?: BlogPost;
   doctors: { id: string; name: string }[];
 }) {
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <AdminForm action={action} className="flex flex-col gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Slug" htmlFor="slug" help="Used in the URL: /blog/[slug]">
           <input id="slug" name="slug" required defaultValue={post?.slug} className={ADMIN_INPUT_CLASS} />
@@ -67,9 +69,9 @@ export function BlogForm({
         Published (visible on site)
       </label>
 
-      <Button type="submit" size="xl" className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90">
+      <AdminSubmitButton size="xl" className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90">
         Save Article
-      </Button>
-    </form>
+      </AdminSubmitButton>
+    </AdminForm>
   );
 }

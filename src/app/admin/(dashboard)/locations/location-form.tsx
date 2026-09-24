@@ -15,9 +15,10 @@ export function LocationForm({
   return (
     <AdminForm action={action} className="flex flex-col gap-5">
       <p className="rounded-lg bg-muted/60 px-4 py-3 text-xs text-muted-foreground">
-        The primary location&rsquo;s address appears in the footer and on the About page, and all of
-        its details on the Contact page. The phone/WhatsApp/email in the header and footer come from
-        Site Settings instead.
+        The primary location is the single source for the hospital&rsquo;s contact details: its phone,
+        WhatsApp and email appear in the header, footer, every call/WhatsApp button, the Contact page
+        and booking emails, and its address in the footer, About and Contact pages. Leaving WhatsApp or
+        email blank falls back to the hospital&rsquo;s original number/address.
       </p>
 
       <Field label="Name" htmlFor="name">

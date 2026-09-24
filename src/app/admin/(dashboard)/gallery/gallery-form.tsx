@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Field, ADMIN_INPUT_CLASS } from "@/components/admin/form";
 import { ImageUploadField } from "@/components/admin/image-upload-field";
 import { AdminSubmitButton } from "@/components/admin/submit-button";
+import { AdminForm } from "@/components/admin/admin-form";
+import type { FormState } from "@/lib/admin/actions";
 import type { MediaCategory, MediaItem, MediaType } from "@/generated/prisma";
 import { MEDIA_CATEGORY_HELP, MEDIA_CATEGORY_LABELS } from "./labels";
 
@@ -11,14 +13,14 @@ export function GalleryForm({
   action,
   item,
 }: {
-  action: (formData: FormData) => Promise<void>;
+  action: (state: FormState, formData: FormData) => Promise<FormState>;
   item?: MediaItem;
 }) {
   const [type, setType] = useState<MediaType>(item?.type ?? "IMAGE");
   const [category, setCategory] = useState<MediaCategory>(item?.category ?? "HAPPY_FACES");
 
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <AdminForm action={action} className="flex flex-col gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Type" htmlFor="type">
           <select
@@ -82,6 +84,6 @@ export function GalleryForm({
       <AdminSubmitButton size="xl" className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90">
         Save Media Item
       </AdminSubmitButton>
-    </form>
+    </AdminForm>
   );
 }

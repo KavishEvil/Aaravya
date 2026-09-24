@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Field, ADMIN_INPUT_CLASS } from "@/components/admin/form";
 import { AdminForm } from "@/components/admin/admin-form";
 import { AdminSubmitButton } from "@/components/admin/submit-button";
@@ -12,7 +13,12 @@ export default async function AdminSettingsPage() {
     <div>
       <h1 className="font-heading text-2xl font-semibold text-foreground">Site Settings</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Contact info and analytics IDs used across the whole site. Leave a field blank to remove it.
+        Social links and analytics IDs used across the whole site. Leave a field blank to remove it.{" "}
+        Phone, WhatsApp and email are edited on the{" "}
+        <Link href="/admin/locations" className="font-medium text-primary hover:underline">
+          primary location
+        </Link>
+        .
       </p>
 
       <AdminForm

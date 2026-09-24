@@ -133,9 +133,10 @@ export const getPublishedBlogPostBySlug = cache(async (slug: string) => {
   });
 });
 
-export async function getPrimaryLocation() {
+/** Cached per request: the layout, header, footer and page all read it. */
+export const getPrimaryLocation = cache(async () => {
   return prisma.location.findFirst({ where: { isPrimary: true }, orderBy: { createdAt: "asc" } });
-}
+});
 
 /**
  * Wrapped in `cache()` too: this is fetched independently in
@@ -162,17 +163,18 @@ export type ContactDetails = {
   whatsappHref: (message?: string) => string;
 };
 
-/** Hospital contact details from Site Settings, with the original numbers as
- * fallback — the one place public pages should get a phone/WhatsApp link from. */
+/** Hospital contact details from the primary Location (the single source of
+ * truth for phone/WhatsApp/email), with the original numbers as fallback —
+ * the one place public pages should get a phone/WhatsApp link from. */
 export async function getContactDetails(): Promise<ContactDetails> {
-  const settings = await getSiteSettings();
-  const phone = settings.phone?.trim() || DEFAULT_PHONE;
-  const whatsapp = settings.whatsapp?.trim() || DEFAULT_WHATSAPP;
+  const location = await getPrimaryLocation();
+  const phone = location?.phone?.trim() || DEFAULT_PHONE;
+  const whatsapp = location?.whatsapp?.trim() || DEFAULT_WHATSAPP;
   return {
     phone,
     phoneHref: `tel:${phone.replace(/[^\d+]/g, "")}`,
     whatsapp,
-    email: settings.email?.trim() || DEFAULT_EMAIL,
+    email: location?.email?.trim() || DEFAULT_EMAIL,
     whatsappHref: (message?: string) =>
       `https://wa.me/${whatsapp}${message ? `?text=${encodeURIComponent(message)}` : ""}`,
   };

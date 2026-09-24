@@ -1,5 +1,5 @@
 import { AdminFormError } from "@/lib/admin/actions";
-import { validEmail, validPhone, validUrl, validWhatsapp } from "@/lib/admin/validate";
+import { validUrl } from "@/lib/admin/validate";
 
 type SettingDef = {
   key: string;
@@ -9,27 +9,12 @@ type SettingDef = {
   validate: (value: string) => string;
 };
 
+/**
+ * Site-wide settings only. Phone, WhatsApp and email are location-specific and
+ * live on the primary Location (see getContactDetails) — the old `phone`,
+ * `whatsapp` and `email` SiteSetting rows are no longer read.
+ */
 export const SETTINGS_KEYS: readonly SettingDef[] = [
-  {
-    key: "phone",
-    label: "Phone",
-    help: "Header, footer, call buttons across the site, and booking emails",
-    placeholder: "+91 87338 89957",
-    validate: (v) => validPhone(v),
-  },
-  {
-    key: "whatsapp",
-    label: "WhatsApp Number",
-    help: "Country code + number, digits only — every “WhatsApp us” link",
-    placeholder: "918733889957",
-    validate: (v) => validWhatsapp(v),
-  },
-  {
-    key: "email",
-    label: "Email",
-    help: "Footer and the organisation details search engines read",
-    validate: (v) => validEmail(v),
-  },
   {
     key: "instagram_url",
     label: "Instagram URL",

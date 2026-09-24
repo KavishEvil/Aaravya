@@ -3,27 +3,23 @@
 import { Loader2 } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { useAdminFormStatus } from "@/components/admin/admin-form";
 
 /**
- * Drop-in replacement for a plain submit `<Button>` inside an admin
- * `<form action={serverAction}>`. `useFormStatus` reads pending state from
- * the nearest parent form, so this needs no props or state wiring from the
- * page — it just has to render somewhere inside that form.
- *
- * Doubles as upload-progress feedback for forms using `ImageUploadField`:
- * the browser doesn't expose real byte-level progress for a `<form
- * action={...}>` submission, but disabling the button and showing a spinner
- * for the whole "uploading + saving" window is enough to prevent a
- * double-submit and tell the admin something is happening.
+ * Submit button for admin forms: disabled with a spinner while the save (and
+ * any image upload) is in flight, to prevent double-submits. Reads pending
+ * state from `AdminForm`, or from a plain `<form action>` via `useFormStatus`.
  */
 export function AdminSubmitButton({
   children,
   pendingText = "Saving…",
   ...props
 }: React.ComponentProps<typeof Button> & { pendingText?: string }) {
-  const { pending } = useFormStatus();
+  const { pending: formPending } = useFormStatus();
+  const status = useAdminFormStatus();
+  const pending = status.pending || formPending;
   return (
-    <Button type="submit" disabled={pending} {...props}>
+    <Button type="submit" disabled={pending || !status.ready} {...props}>
       {pending ? (
         <>
           <Loader2 className="size-4 animate-spin" /> {pendingText}

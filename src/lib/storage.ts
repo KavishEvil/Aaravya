@@ -135,8 +135,8 @@ export async function deleteImage(key: string | null | undefined): Promise<void>
  * Resolves an `ImageUploadField` submission (a `File` under `field`, plus a
  * `${field}__remove` flag) into the value to persist. A newly-picked file
  * wins, then an explicit removal, otherwise `previousUrl` is kept. The
- * replaced file is deleted from storage. Validation failures are rethrown as
- * plain `Error`s so the admin error boundary shows the message.
+ * replaced file is deleted from storage. Throws `ImageValidationError` for a
+ * bad file, which `adminAction` turns into a message on the form.
  */
 export async function resolveImageUpload(
   formData: FormData,
@@ -148,15 +148,10 @@ export async function resolveImageUpload(
   const hasNewFile = file instanceof File && file.size > 0;
   const removeRequested = formData.get(`${field}__remove`) === "1";
 
-  try {
-    if (hasNewFile) {
-      const uploaded = await uploadImage(file, bucket);
-      await deleteImage(keyFromUrl(previousUrl));
-      return uploaded.url;
-    }
-  } catch (err) {
-    if (err instanceof ImageValidationError) throw new Error(err.message);
-    throw err;
+  if (hasNewFile) {
+    const uploaded = await uploadImage(file, bucket);
+    await deleteImage(keyFromUrl(previousUrl));
+    return uploaded.url;
   }
   if (removeRequested) {
     await deleteImage(keyFromUrl(previousUrl));

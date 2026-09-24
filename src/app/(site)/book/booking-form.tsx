@@ -196,9 +196,13 @@ export function BookingForm({
                 <input
                   id="preferredDate"
                   type="date"
+                  min={new Date().toISOString().slice(0, 10)}
+                  // The server's "today" can differ from the browser's around midnight.
+                  suppressHydrationWarning
                   {...register("preferredDate")}
                   className={inputClass}
                 />
+                {errors.preferredDate && <p className="mt-1 text-xs text-destructive">{errors.preferredDate.message}</p>}
               </div>
               <div>
                 <Label>Preferred Time (optional)</Label>

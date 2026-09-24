@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import type { AppointmentStatus } from "@/generated/prisma";
 import { updateAppointmentStatus } from "./actions";
 
@@ -15,14 +16,28 @@ const STATUS_STYLES: Record<AppointmentStatus, string> = {
 
 export function StatusSelect({ id, status }: { id: string; status: AppointmentStatus }) {
   const [pending, startTransition] = useTransition();
+  const [value, setValue] = useState(status);
+  const router = useRouter();
+
   return (
     <select
-      defaultValue={status}
+      value={value}
       disabled={pending}
-      onChange={(e) =>
-        startTransition(() => updateAppointmentStatus(id, e.target.value as AppointmentStatus))
-      }
-      className={`rounded-full border px-2.5 py-1 text-xs font-medium capitalize outline-none transition-opacity disabled:opacity-50 ${STATUS_STYLES[status]}`}
+      aria-label="Appointment status"
+      onChange={(e) => {
+        const next = e.target.value as AppointmentStatus;
+        setValue(next);
+        startTransition(async () => {
+          const result = await updateAppointmentStatus(id, next);
+          if (result?.error) {
+            // Don't leave the dropdown showing a status that wasn't saved.
+            setValue(status);
+            alert(result.error);
+            router.refresh();
+          }
+        });
+      }}
+      className={`rounded-full border px-2.5 py-1 text-xs font-medium capitalize outline-none transition-opacity disabled:opacity-50 ${STATUS_STYLES[value]}`}
     >
       {STATUSES.map((s) => (
         <option key={s} value={s}>

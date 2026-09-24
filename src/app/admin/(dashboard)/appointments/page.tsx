@@ -1,26 +1,31 @@
 import Link from "next/link";
 import { Video, Building2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import type { AppointmentStatus, AppointmentType } from "@/generated/prisma";
+import { AppointmentStatus, AppointmentType } from "@/generated/prisma";
 import { AdminTable } from "@/components/admin/admin-table";
 import { DeleteButton } from "@/components/admin/delete-button";
+import { ANONYMOUS_CATEGORIES } from "@/content/anonymous-categories";
 import { StatusSelect } from "./status-select";
 import { deleteAppointment } from "./actions";
 
 const STATUS_FILTERS: (AppointmentStatus | "ALL")[] = ["ALL", "PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"];
+
+function oneOf<T extends string>(values: readonly T[], value: string | undefined): T | undefined {
+  return values.includes(value as T) ? (value as T) : undefined;
+}
 
 export default async function AdminAppointmentsPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string; type?: string }>;
 }) {
-  const { status, type } = await searchParams;
+  const params = await searchParams;
+  // Unknown values from a hand-edited URL are ignored rather than crashing the query.
+  const status = oneOf(Object.values(AppointmentStatus), params.status);
+  const type = oneOf(Object.values(AppointmentType), params.type);
 
   const appointments = await prisma.appointment.findMany({
-    where: {
-      status: status && status !== "ALL" ? (status as AppointmentStatus) : undefined,
-      type: type ? (type as AppointmentType) : undefined,
-    },
+    where: { status, type },
     include: { condition: true, doctor: true },
     orderBy: { createdAt: "desc" },
     take: 100,
@@ -48,13 +53,13 @@ export default async function AdminAppointmentsPage({
       </div>
 
       <AdminTable
-        columns={["Patient", "Contact", "Type", "Condition / Doctor", "Status", "Received", ""]}
+        columns={["Patient", "Contact", "Type", "Condition / Doctor", "Requested", "Status", "Received", ""]}
         rows={appointments.map((a) => [
           <div key="name">
             <p className="font-medium text-foreground">{a.isAnonymous ? a.nickname ?? "Anonymous" : a.name ?? "—"}</p>
             {a.isAnonymous && (
               <span className="mt-0.5 inline-block rounded-full bg-accent px-2 py-0.5 text-[0.65rem] font-medium text-accent-foreground">
-                {a.anonymousCategory}
+                Anonymous · {ANONYMOUS_CATEGORIES.find((c) => c.dbValue === a.anonymousCategory)?.label ?? "Other"}
               </span>
             )}
           </div>,
@@ -74,7 +79,23 @@ export default async function AdminAppointmentsPage({
             {a.condition && <p>{a.condition.name}</p>}
             {a.doctor && <p>{a.doctor.name}</p>}
           </div>,
-          <StatusSelect key="status" id={a.id} status={a.status} />,
+          <div key="requested" className="max-w-56 text-xs text-muted-foreground">
+            {a.preferredDate || a.preferredTimeSlot ? (
+              <p className="font-medium text-foreground">
+                {a.preferredDate?.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}
+                {a.preferredDate && a.preferredTimeSlot ? " · " : ""}
+                {a.preferredTimeSlot}
+              </p>
+            ) : (
+              <p>Any time</p>
+            )}
+            {a.notes && (
+              <p className="mt-0.5 line-clamp-2" title={a.notes}>
+                {a.notes}
+              </p>
+            )}
+          </div>,
+          <StatusSelect key={`status-${a.status}`} id={a.id} status={a.status} />,
           <span key="date" className="text-xs text-muted-foreground">
             {a.createdAt.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
           </span>,

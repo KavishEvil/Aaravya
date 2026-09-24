@@ -1,30 +1,33 @@
-import { mkdir, unlink, writeFile } from "fs/promises";
-import path from "path";
 import crypto from "crypto";
 import sharp from "sharp";
+import { createClient } from "@supabase/supabase-js";
 
 /**
  * Image storage abstraction. Every admin form that accepts an image goes
- * through `uploadImage`/`deleteImage` here rather than touching the
- * filesystem (or a cloud bucket) directly, so the actual backend can be
- * swapped later without touching any form/action code.
+ * through `uploadImage`/`deleteImage` here rather than touching Supabase
+ * Storage directly, so callers stay backend-agnostic.
  *
- * CURRENT BACKEND: local disk, under `public/uploads/`. This is a
- * placeholder, not a production recommendation — the brief this was built
- * against explicitly calls for a real object storage provider (Vercel Blob,
- * Cloudflare R2, or S3-compatible) before any real deployment, since local
- * container storage isn't durable or shareable across instances. In this
- * project's Docker Compose dev setup specifically, `./:/app` is bind-mounted
- * so files written here DO persist across container restarts on the host
- * machine — but that's a dev-environment coincidence, not something to rely
- * on in production. Swap this file's internals for a real provider's SDK
- * once credentials are available; every caller (`uploadImage`/`deleteImage`)
- * keeps the same signature either way.
+ * BACKEND: Supabase Storage. `folder` is the target bucket name — buckets
+ * are provisioned 1:1 per resource (`doctors`, `conditions`, `procedures`,
+ * `gallery`, `testimonials`, `consultation-categories`), each public so
+ * `getPublicUrl` returns a directly renderable URL with no signing. Uses the
+ * service-role key: these calls only ever run from admin server actions
+ * (already behind the `/admin` auth gate), never from the browser.
  */
 
-const UPLOAD_ROOT = path.join(process.cwd(), "public", "uploads");
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB raw upload cap (client also caps lower, see ImageUploadField)
 const MAX_DIMENSION = 1600; // longest side, px, after resize
+
+function supabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceRoleKey) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env.");
+  }
+  return createClient(url, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
 
 export class ImageValidationError extends Error {}
 
@@ -61,9 +64,9 @@ function detectRealImageType(buffer: Buffer): "image/jpeg" | "image/png" | "imag
 }
 
 /**
- * Validates, resizes/compresses (via sharp), and stores an uploaded image.
- * `folder` groups files by the resource they belong to (e.g. "doctors",
- * "gallery", "blog") purely for organization on disk.
+ * Validates, resizes/compresses (via sharp), and uploads an image to Supabase
+ * Storage. `folder` is the destination bucket name (e.g. "doctors",
+ * "conditions") — the bucket must already exist.
  *
  * Throws `ImageValidationError` (safe to show to the admin) if the file
  * isn't a real, supported image or is too large. Never partially writes —
@@ -95,38 +98,86 @@ export async function uploadImage(file: File, folder: string): Promise<UploadedI
     throw new ImageValidationError("That image couldn't be processed — it may be corrupted.");
   }
 
-  const dir = path.join(UPLOAD_ROOT, folder);
-  await mkdir(dir, { recursive: true });
   const filename = `${crypto.randomUUID()}.webp`;
-  await writeFile(path.join(dir, filename), processed);
+  const supabase = supabaseAdmin();
+  const { error } = await supabase.storage.from(folder).upload(filename, processed, {
+    contentType: "image/webp",
+    upsert: false,
+  });
+  if (error) {
+    throw new Error(`Failed to upload image to Supabase Storage bucket "${folder}": ${error.message}`);
+  }
 
+  const { data } = supabase.storage.from(folder).getPublicUrl(filename);
   const key = `${folder}/${filename}`;
-  return { url: `/uploads/${key}`, key };
+  return { url: data.publicUrl, key };
 }
 
-/** Deletes a previously-uploaded image by its storage key. Safe to call
- * with `null`/`undefined` (no-op), and safe to call on a file that's
- * already gone. */
+/** Deletes a previously-uploaded image by its storage key (`bucket/filename`).
+ * Safe to call with `null`/`undefined` (no-op), and safe to call on a file
+ * that's already gone. */
 export async function deleteImage(key: string | null | undefined): Promise<void> {
   if (!key) return;
-  const safeKey = key.replace(/^\/+/, "").replace(/\.\./g, "");
-  const filePath = path.join(UPLOAD_ROOT, safeKey);
-  if (!filePath.startsWith(UPLOAD_ROOT)) return; // never delete outside our own uploads root
+  const slash = key.indexOf("/");
+  if (slash <= 0) return;
+  const bucket = key.slice(0, slash);
+  const path = key.slice(slash + 1);
+  if (!path) return;
   try {
-    await unlink(filePath);
+    await supabaseAdmin().storage.from(bucket).remove([path]);
   } catch {
-    // Already gone, or never existed — nothing to do.
+    // Already gone, never existed, or storage unreachable — nothing more we
+    // can do from here; the DB record's own write already went through.
   }
+}
+
+/**
+ * Resolves an `ImageUploadField` submission (a `File` under `field`, plus a
+ * `${field}__remove` flag) into the value to persist. A newly-picked file
+ * wins, then an explicit removal, otherwise `previousUrl` is kept. The
+ * replaced file is deleted from storage. Validation failures are rethrown as
+ * plain `Error`s so the admin error boundary shows the message.
+ */
+export async function resolveImageUpload(
+  formData: FormData,
+  field: string,
+  bucket: string,
+  previousUrl: string | null
+): Promise<string | null> {
+  const file = formData.get(field);
+  const hasNewFile = file instanceof File && file.size > 0;
+  const removeRequested = formData.get(`${field}__remove`) === "1";
+
+  try {
+    if (hasNewFile) {
+      const uploaded = await uploadImage(file, bucket);
+      await deleteImage(keyFromUrl(previousUrl));
+      return uploaded.url;
+    }
+  } catch (err) {
+    if (err instanceof ImageValidationError) throw new Error(err.message);
+    throw err;
+  }
+  if (removeRequested) {
+    await deleteImage(keyFromUrl(previousUrl));
+    return null;
+  }
+  return previousUrl;
 }
 
 /**
  * Recovers the storage key from a URL previously returned by `uploadImage`,
  * so a form's server action can clean up the old file on replace/delete.
- * Returns `null` for anything not under our own `/uploads/` path (a legacy
- * asset path, an external URL, or already empty) — those should never be
- * deleted by this function.
+ * Returns `null` for anything not a Supabase Storage public URL for one of
+ * our own buckets (a legacy `/uploads/...` or `assets/img/...` path from the
+ * old static site, an external URL, or already empty) — those should never
+ * be deleted by this function.
  */
 export function keyFromUrl(url: string | null | undefined): string | null {
-  if (!url || !url.startsWith("/uploads/")) return null;
-  return url.slice("/uploads/".length);
+  if (!url) return null;
+  const marker = "/storage/v1/object/public/";
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+  const key = url.slice(idx + marker.length);
+  return key.length > 0 ? key : null;
 }

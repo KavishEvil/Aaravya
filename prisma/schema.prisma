@@ -5,6 +5,12 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Prisma 7 removed `url`/`directUrl` from the schema's datasource block
+  // entirely — the CLI's connection now comes solely from `datasource.url`
+  // in `prisma.config.ts` (see that file for why it's pointed at DIRECT_URL,
+  // not DATABASE_URL). The app's own runtime queries are unaffected: they go
+  // through the separate @prisma/adapter-pg driver adapter in
+  // `src/lib/prisma.ts`, which uses the pooled DATABASE_URL directly.
 }
 
 enum ConditionCategory {
@@ -56,10 +62,6 @@ enum MediaCategory {
 enum MediaType {
   IMAGE
   VIDEO
-}
-
-enum AdminRole {
-  ADMIN
 }
 
 model Doctor {
@@ -147,6 +149,7 @@ model Procedure {
   successRate         String?
   costMin             Int?
   costMax             Int?
+  imageUrl            String?
   downloadablePdfUrl  String?
   lastUpdatedAt       DateTime  @updatedAt
   createdAt           DateTime  @default(now())
@@ -324,13 +327,4 @@ model SiteSetting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
-}
-
-model AdminUser {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
-  name         String?
-  role         AdminRole @default(ADMIN)
-  createdAt    DateTime  @default(now())
 }

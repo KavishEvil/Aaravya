@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ConditionCategory } from "@/generated/prisma";
+import { deleteImage, ImageValidationError, keyFromUrl, uploadImage } from "@/lib/storage";
 
 function linesToArray(value: FormDataEntryValue | null): string[] {
   return String(value ?? "")
@@ -27,12 +28,31 @@ function parseTreatmentOptions(value: FormDataEntryValue | null) {
     .filter((o) => o.title);
 }
 
+/** Same precedence as `resolvePhotoUrl` in the doctors actions: a newly-picked
+ * file wins, then an explicit removal, then the existing value is left
+ * untouched. The previous uploaded file (if any) is cleaned up once replaced. */
+async function resolveHeroImageUrl(formData: FormData, previousUrl: string | null): Promise<string | null> {
+  const file = formData.get("heroImageUrl");
+  const hasNewFile = file instanceof File && file.size > 0;
+  const removeRequested = formData.get("heroImageUrl__remove") === "1";
+
+  if (hasNewFile) {
+    const uploaded = await uploadImage(file as File, "conditions");
+    await deleteImage(keyFromUrl(previousUrl));
+    return uploaded.url;
+  }
+  if (removeRequested) {
+    await deleteImage(keyFromUrl(previousUrl));
+    return null;
+  }
+  return previousUrl;
+}
+
 function readConditionForm(formData: FormData) {
   return {
     slug: String(formData.get("slug")).trim(),
     name: String(formData.get("name")).trim(),
     category: String(formData.get("category")) as ConditionCategory,
-    heroImageUrl: toStringOrNull(formData.get("heroImageUrl")),
     seoTitle: toStringOrNull(formData.get("seoTitle")),
     metaDescription: toStringOrNull(formData.get("metaDescription")),
     directAnswer: String(formData.get("directAnswer")).trim(),
@@ -51,7 +71,14 @@ function readConditionForm(formData: FormData) {
 
 export async function createCondition(formData: FormData) {
   const data = readConditionForm(formData);
-  await prisma.condition.create({ data });
+  let heroImageUrl: string | null = null;
+  try {
+    heroImageUrl = await resolveHeroImageUrl(formData, null);
+  } catch (err) {
+    if (err instanceof ImageValidationError) throw new Error(err.message);
+    throw err;
+  }
+  await prisma.condition.create({ data: { ...data, heroImageUrl } });
   revalidatePath("/admin/conditions");
   revalidatePath("/conditions");
   redirect("/admin/conditions");
@@ -59,7 +86,17 @@ export async function createCondition(formData: FormData) {
 
 export async function updateCondition(id: string, formData: FormData) {
   const data = readConditionForm(formData);
-  await prisma.condition.update({ where: { id }, data });
+  const existing = await prisma.condition.findUnique({ where: { id }, select: { heroImageUrl: true } });
+
+  let heroImageUrl: string | null;
+  try {
+    heroImageUrl = await resolveHeroImageUrl(formData, existing?.heroImageUrl ?? null);
+  } catch (err) {
+    if (err instanceof ImageValidationError) throw new Error(err.message);
+    throw err;
+  }
+
+  await prisma.condition.update({ where: { id }, data: { ...data, heroImageUrl } });
   revalidatePath("/admin/conditions");
   revalidatePath("/conditions");
   revalidatePath(`/conditions/${data.slug}`);
@@ -67,7 +104,9 @@ export async function updateCondition(id: string, formData: FormData) {
 }
 
 export async function deleteCondition(id: string) {
+  const existing = await prisma.condition.findUnique({ where: { id }, select: { heroImageUrl: true } });
   await prisma.condition.delete({ where: { id } });
+  await deleteImage(keyFromUrl(existing?.heroImageUrl ?? null));
   revalidatePath("/admin/conditions");
   revalidatePath("/conditions");
 }

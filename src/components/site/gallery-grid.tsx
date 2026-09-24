@@ -54,7 +54,7 @@ export function GalleryGrid({
             >
               <Image
                 src={src}
-                alt="Aaravya Hospital"
+                alt={item.caption ?? "Aaravya Hospital"}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className="object-cover"
@@ -92,7 +92,7 @@ export function GalleryGrid({
               {legacyAsset(images[activeIndex]?.url) && (
                 <Image
                   src={legacyAsset(images[activeIndex]!.url)!}
-                  alt="Aaravya Hospital"
+                  alt={images[activeIndex]!.caption ?? "Aaravya Hospital"}
                   fill
                   sizes="(max-width: 768px) 100vw, 768px"
                   className="object-contain"

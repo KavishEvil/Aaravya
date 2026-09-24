@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, ADMIN_INPUT_CLASS } from "@/components/admin/form";
+import { ImageUploadField } from "@/components/admin/image-upload-field";
 import type { Procedure } from "@/generated/prisma";
 
 export function ProcedureForm({
@@ -53,6 +54,8 @@ export function ProcedureForm({
       <Field label="Description" htmlFor="description">
         <Textarea id="description" name="description" rows={4} required defaultValue={procedure?.description} />
       </Field>
+
+      <ImageUploadField name="imageUrl" label="Procedure Image" currentImageUrl={procedure?.imageUrl} />
 
       <div className="grid gap-5 sm:grid-cols-3">
         <Field label="Duration" htmlFor="duration" help="e.g. 30–45 minutes">

@@ -1,6 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, ConditionCategory, MediaCategory, MediaType } from "../src/generated/prisma";
-import bcrypt from "bcryptjs";
 
 import conditionsData from "./seed-data/conditions.json";
 import doctorsData from "./seed-data/doctors.json";
@@ -54,18 +53,6 @@ function slugify(input: string) {
 }
 
 async function main() {
-  console.log("Seeding admin user...");
-  const adminPasswordHash = await bcrypt.hash("ChangeMe123!", 10);
-  await prisma.adminUser.upsert({
-    where: { email: "admin@aaravyahospital.com" },
-    update: {},
-    create: {
-      email: "admin@aaravyahospital.com",
-      passwordHash: adminPasswordHash,
-      name: "Aaravya Admin",
-    },
-  });
-
   console.log("Seeding location...");
   await prisma.location.deleteMany({});
   await prisma.location.create({ data: locationData });
@@ -269,7 +256,10 @@ async function main() {
   );
 
   console.log("Seed complete.");
-  console.log(`Admin login: admin@aaravyahospital.com / ChangeMe123! (change before any real deploy)`);
+  console.log(
+    "Admin login is provisioned separately via Supabase Auth — run " +
+      "`npx tsx scripts/create-admin-user.ts <email> <password>` to create it."
+  );
 }
 
 main()

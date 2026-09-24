@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, ADMIN_INPUT_CLASS } from "@/components/admin/form";
+import { ImageUploadField } from "@/components/admin/image-upload-field";
 import { CATEGORY_LABELS } from "@/lib/queries";
 import { treatmentOptionsToText } from "./format";
 import type { Condition } from "@/generated/prisma";
@@ -41,9 +42,7 @@ export function ConditionForm({
         </select>
       </Field>
 
-      <Field label="Hero Image Path" htmlFor="heroImageUrl" help="e.g. assets/img/treatment/piletreatment.png">
-        <input id="heroImageUrl" name="heroImageUrl" defaultValue={condition?.heroImageUrl ?? ""} className={ADMIN_INPUT_CLASS} />
-      </Field>
+      <ImageUploadField name="heroImageUrl" label="Hero Image" currentImageUrl={condition?.heroImageUrl} />
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="SEO Title" htmlFor="seoTitle">

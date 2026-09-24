@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, ADMIN_INPUT_CLASS } from "@/components/admin/form";
+import { ImageUploadField } from "@/components/admin/image-upload-field";
 import type { Testimonial } from "@/generated/prisma";
 
 export function TestimonialForm({
@@ -46,9 +47,7 @@ export function TestimonialForm({
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Image Path" htmlFor="imageUrl">
-          <input id="imageUrl" name="imageUrl" defaultValue={testimonial?.imageUrl ?? ""} className={ADMIN_INPUT_CLASS} />
-        </Field>
+        <ImageUploadField name="imageUrl" label="Photo" currentImageUrl={testimonial?.imageUrl} />
         <Field label="YouTube Video ID" htmlFor="videoUrl">
           <input id="videoUrl" name="videoUrl" defaultValue={testimonial?.videoUrl ?? ""} className={ADMIN_INPUT_CLASS} />
         </Field>

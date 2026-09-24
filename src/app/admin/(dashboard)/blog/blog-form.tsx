@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, ADMIN_INPUT_CLASS } from "@/components/admin/form";
+import { ImageUploadField } from "@/components/admin/image-upload-field";
 import type { BlogPost } from "@/generated/prisma";
 
 export function BlogForm({
@@ -44,9 +45,7 @@ export function BlogForm({
         <Textarea id="body" name="body" rows={10} required defaultValue={post?.body} />
       </Field>
 
-      <Field label="Hero Image Path" htmlFor="heroImageUrl">
-        <input id="heroImageUrl" name="heroImageUrl" defaultValue={post?.heroImageUrl ?? ""} className={ADMIN_INPUT_CLASS} />
-      </Field>
+      <ImageUploadField name="heroImageUrl" label="Hero Image" currentImageUrl={post?.heroImageUrl} />
 
       <Field label="Tags" htmlFor="tags" help="One per line">
         <Textarea id="tags" name="tags" rows={2} defaultValue={post?.tags.join("\n") ?? ""} />

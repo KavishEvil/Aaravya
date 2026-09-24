@@ -31,7 +31,7 @@ on a specific feature's history.
 | Styling | Tailwind CSS v4 (CSS-first, no `tailwind.config.js` — see `src/app/globals.css`) + shadcn/ui (Radix-based) + Framer Motion |
 | Database | PostgreSQL (local: Docker Compose, port 5433 host / 5432 in-container) |
 | ORM | Prisma 7, `@prisma/adapter-pg` driver adapter, client generated to `src/generated/prisma` (gitignored — run `npx prisma generate` after install) |
-| Auth | Auth.js / NextAuth v5 beta, Credentials provider, bcrypt password hashing, JWT sessions, gate lives in `src/proxy.ts` matching `/admin/:path*` |
+| Auth | Supabase Auth (email/password), `@supabase/ssr` cookie-based sessions, gate lives in `src/lib/supabase/middleware.ts` (called from `src/proxy.ts`) matching `/admin/:path*`, checked via `supabase.auth.getClaims()` |
 | Forms | react-hook-form + Zod on the **public-facing** forms (booking, anonymous request); admin CRUD forms use **plain `<form action={serverAction}>` + FormData parsing**, not react-hook-form — see §5 |
 | Rich text | Tiptap (`@tiptap/react`, `starter-kit`) — installed but confirm current usage before assuming it's wired into a specific field |
 | Email | Nodemailer → MailHog in dev (`src/lib/mailer.ts`) |
@@ -48,13 +48,15 @@ Full source of truth: `prisma/schema.prisma`. Models: `Doctor`, `Condition`,
 `Faq`, `Testimonial`, `MediaItem` (gallery, one model + `category` enum),
 `Appointment` (unified booking **and** anonymous requests via `isAnonymous`
 flag — there is no separate anonymous-request table), `SymptomCheckSession`,
-`BlogPost`, `CostEstimatorRule`, `Location`, `SiteSetting` (key/value store),
-`AdminUser`.
+`BlogPost`, `CostEstimatorRule`, `Location`, `SiteSetting` (key/value store).
+There is no `AdminUser` model — admin accounts live entirely in Supabase Auth,
+outside Prisma's schema.
 
 Seed data lives in `prisma/seed-data/*.json` (real content extracted from the
-old static site) and is loaded by `prisma/seed.ts`. Seeded admin login:
-`admin@aaravyahospital.com` / `ChangeMe123!` — **must be changed before any
-real deployment.**
+old static site) and is loaded by `prisma/seed.ts`. Admin login is provisioned
+separately: `npx tsx scripts/create-admin-user.ts <email> <password>` creates a
+real admin user via the Supabase Auth Admin API (requires
+`SUPABASE_SERVICE_ROLE_KEY`).
 
 ## 4. Route map
 
@@ -127,16 +129,14 @@ implementation.
 
 ## 7. Known issues / things to raise with the previous developer or client
 
-- **`.env` is committed to git** (see commit `fb4cfb2` "Allow env files to be
-  committed" + `5a49aff`). Values match `docker-compose.yml`'s dev-only
-  defaults (local Postgres password, a placeholder `NEXTAUTH_SECRET`, local
-  MailHog SMTP) — not real production secrets as of now. Still bad practice:
-  if this repo is ever pushed somewhere shared/public, or if someone points
-  `.env` at real SMTP/DB credentials without re-adding it to `.gitignore`,
-  those leak. Recommend un-tracking `.env` and committing an `.env.example`
-  instead before this repo goes anywhere other than a private local clone.
-- Seeded admin credentials (`admin@aaravyahospital.com` / `ChangeMe123!`)
-  must be rotated before any real deploy.
+- `.env` is git-ignored (`.env*` in `.gitignore`) and was scrubbed from git
+  history after an earlier commit had included it — the tracked file is
+  `.env.example` (placeholder values only). Real Supabase/DB/SMTP credentials
+  live only in the untracked `.env` on each machine that runs this project.
+- Admin accounts are provisioned directly in Supabase Auth (see "Data model"
+  above) — there is no seeded credential to rotate. Before any real deploy,
+  confirm every account in the Supabase project's Auth users list is one you
+  actually intend to keep.
 - No automated tests (unit or e2e) exist — all verification so far has been
   manual browser testing per the README checklist. If ownership is
   transferring, decide early whether to add a test harness.
@@ -151,14 +151,45 @@ implementation.
 
 ## 8. Running locally
 
+The database is Supabase Postgres now, not a local container — `DATABASE_URL`
+(transaction-mode pooler, port 6543) and `DIRECT_URL` (session-mode pooler,
+port 5432) in `.env` point at the Supabase project. Real production data
+lives there; it was migrated from the old local Docker Postgres via
+`pg_dump`/`pg_restore` and its row counts have been verified to match,
+table by table.
+
+Docker is still used for two things: running the app itself (`app`
+service — this also keeps native deps like `sharp` building against the
+right platform inside the container, not your host), and MailHog for local
+email testing. The `db` service (local Postgres) is no longer read by the
+app at all — it's kept in `docker-compose.yml` purely as a convenient
+Postgres-client toolbox (`psql`/`pg_restore` are preinstalled in that image)
+for one-off admin operations against Supabase; it still starts with
+`docker compose up` by default, but you can `docker compose stop db` if you
+don't need it running.
+
 ```bash
 docker compose up
-docker compose exec app npx prisma migrate deploy
-docker compose exec app npx prisma db seed
+docker compose exec app npx prisma migrate deploy   # only needed after a new migration is added
 ```
 App: `http://localhost:3000` · Admin: `http://localhost:3000/admin` ·
 MailHog UI: `http://localhost:8026` (compose maps host `8026`→container
 `8025`; README's `8025` reference is stale).
+
+`prisma db seed` is no longer part of normal setup — Supabase already holds
+real data, not seed data. Only run it against a project you explicitly want
+to reset to sample data.
+
+Admin login has no seeded credential — provision it once per environment:
+
+```bash
+docker compose exec app npx tsx scripts/create-admin-user.ts you@example.com "a-real-password"
+```
+
+This calls the Supabase Auth Admin API (`SUPABASE_SERVICE_ROLE_KEY`, already in
+`.env`) to create the user directly, `email_confirm: true` so there's no
+verification-email step to wire up. Run it again with a different email to add
+more admin users; there's no `/admin` self-registration flow.
 
 ## 9. Suggested first tasks for a new agent/developer
 

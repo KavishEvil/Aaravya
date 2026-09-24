@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/site/reveal";
+import { legacyAsset } from "@/lib/assets";
 import { getAllProcedureSlugs, getProcedureBySlug } from "@/lib/queries";
 import { JsonLd } from "@/components/json-ld";
 import { absoluteUrl, medicalProcedureSchema } from "@/lib/schema";
@@ -43,10 +45,12 @@ export default async function ProcedurePage({
     { label: "Success Rate", value: procedure.successRate },
   ].filter((f) => f.value);
 
+  const image = legacyAsset(procedure.imageUrl);
   const schema = medicalProcedureSchema({
     name: procedure.name,
     description: procedure.description,
     url: absoluteUrl(`/treatments/${procedure.slug}`),
+    image,
   });
 
   return (
@@ -61,6 +65,20 @@ export default async function ProcedurePage({
       </nav>
 
       <h1 className="mt-4 text-balance font-heading text-4xl font-semibold text-forest-900">{procedure.name}</h1>
+
+      {image && (
+        <div className="relative mt-6 h-64 overflow-hidden rounded-2xl border border-border bg-forest-50 sm:h-80">
+          <Image
+            src={image}
+            alt={procedure.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 768px"
+            className="object-contain p-6"
+            priority
+          />
+        </div>
+      )}
+
       <p className="mt-4 text-muted-foreground">{procedure.description}</p>
 
       {facts.length > 0 ? (

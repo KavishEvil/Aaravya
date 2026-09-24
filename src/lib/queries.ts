@@ -91,6 +91,42 @@ export async function getMediaByCategory(category: "HAPPY_FACES" | "INTERIOR" | 
   });
 }
 
+/** Approved entries that have something to show (a quote, photo, or video). */
+export async function getApprovedTestimonials(opts: { featuredOnly?: boolean; limit?: number } = {}) {
+  return prisma.testimonial.findMany({
+    where: {
+      isApproved: true,
+      ...(opts.featuredOnly ? { isFeatured: true } : {}),
+      OR: [{ quote: { not: null } }, { imageUrl: { not: null } }, { videoUrl: { not: null } }],
+    },
+    orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+    take: opts.limit,
+    include: { condition: { select: { slug: true, name: true } } },
+  });
+}
+
+export async function getPublishedBlogPosts() {
+  return prisma.blogPost.findMany({
+    where: { isPublished: true },
+    orderBy: { createdAt: "desc" },
+    select: { slug: true, title: true, excerpt: true, heroImageUrl: true, tags: true, createdAt: true },
+  });
+}
+
+export async function getPublishedBlogSlugs() {
+  const posts = await prisma.blogPost.findMany({ where: { isPublished: true }, select: { slug: true } });
+  return posts.map((p) => p.slug);
+}
+
+/** See `getConditionBySlug` — same generateMetadata + page double-fetch fix.
+ * Unpublished posts resolve to `null`, so drafts 404 publicly. */
+export const getPublishedBlogPostBySlug = cache(async (slug: string) => {
+  return prisma.blogPost.findFirst({
+    where: { slug, isPublished: true },
+    include: { reviewedByDoctor: { select: { name: true, slug: true, qualifications: true, photoUrl: true } } },
+  });
+});
+
 export async function getPrimaryLocation() {
   return prisma.location.findFirst({ where: { isPrimary: true } });
 }

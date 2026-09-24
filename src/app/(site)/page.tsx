@@ -6,19 +6,22 @@ import { Carousel, CarouselSlide } from "@/components/site/carousel";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/reveal";
 import { legacyAsset } from "@/lib/assets";
 import { ANONYMOUS_CATEGORIES } from "@/content/anonymous-categories";
+import { TestimonialQuoteCard } from "@/components/site/testimonial-quote-card";
 import {
   getAllDoctors,
+  getApprovedTestimonials,
   getConditionsGroupedByCategory,
   getFaqs,
   getMediaByCategory,
 } from "@/lib/queries";
 
 export default async function Home() {
-  const [conditionGroups, doctors, faqs, testimonialImages] = await Promise.all([
+  const [conditionGroups, doctors, faqs, testimonialImages, featuredQuotes] = await Promise.all([
     getConditionsGroupedByCategory(),
     getAllDoctors(),
     getFaqs("homepage"),
     getMediaByCategory("TESTIMONIAL"),
+    getApprovedTestimonials({ featuredOnly: true, limit: 3 }),
   ]);
 
   const proctology = conditionGroups.find((g) => g.category === "PROCTOLOGY");
@@ -214,7 +217,7 @@ export default async function Home() {
       )}
 
       {/* Testimonials preview */}
-      {featuredImages.length > 0 && (
+      {(featuredImages.length > 0 || featuredQuotes.length > 0) && (
         <section className="border-y border-border bg-forest-50 py-16 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <Reveal className="text-center">
@@ -222,6 +225,16 @@ export default async function Home() {
                 Patient Stories
               </h2>
             </Reveal>
+            {featuredQuotes.length > 0 && (
+              <RevealGroup className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {featuredQuotes.map((t) => (
+                  <RevealItem key={t.id}>
+                    <TestimonialQuoteCard testimonial={t} />
+                  </RevealItem>
+                ))}
+              </RevealGroup>
+            )}
+            {featuredImages.length > 0 && (
             <Carousel ariaLabel="Patient stories" autoplayMs={4500} className="mt-10">
               {featuredImages.map((item) => (
                 <CarouselSlide
@@ -240,6 +253,7 @@ export default async function Home() {
                 </CarouselSlide>
               ))}
             </Carousel>
+            )}
             <div className="mt-8 text-center">
               <Button variant="outline" render={<Link href="/testimonials" />}>
                 See All Testimonials

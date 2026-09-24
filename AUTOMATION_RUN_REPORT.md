@@ -2,12 +2,48 @@
 
 Unattended run, 25 Sept 2026, on branch `redeveloping-aaravya`. Covers the rest of Part 4 (admin QA) and Client Changes Round 1. Everything marked *verified* was checked against a local **production build** (`next build` standalone), not just the dev server. The public pages are statically prerendered in production, so only a production build shows whether an admin edit actually reaches visitors.
 
+## Deployment status: live and verified
+
+| | |
+|---|---|
+| **Now live** | `dpl_CHbCh1JnfqtJP6c3e6Zddvd99UES` (`aaravya-hhsqe48iu-shubham-mandankas-projects.vercel.app`), aliased to **https://aaravya.vercel.app** |
+| **Previous production** | `dpl_FnNAr45S3igovK3QUGHkZBAinmh3` (`aaravya-9npg9yqcp-…`, 23 Sept). This was the pre-migration NextAuth build: its admin redirected to `http://localhost:3000/admin/login`, so the live admin was unusable. |
+| **Branch** | `redeveloping-aaravya`, pushed to `a886d34` (normal fast-forward pushes, no force). |
+| **Rollback, if ever needed** | `vercel rollback dpl_FnNAr45S3igovK3QUGHkZBAinmh3` |
+
+**How it was deployed.**
+- A preview deploy came first, checked page by page via `vercel curl`, then `vercel --prod`.
+- Both used `--build-env NEXT_PUBLIC_SITE_URL=https://aaravya.vercel.app`, because `.env` has `localhost` there, and that value feeds the sitemap, structured data and PDF.
+- A new `.vercelignore` stops the CLI from uploading `aaravya_backup.dump` (a local DB backup that may contain patient data).
+
+**Live checks passed (on https://aaravya.vercel.app).**
+- All 17 public pages return 200 with the correct heading: `/`, `/conditions`, `/conditions/fissure`, `/treatments`, a procedure page, `/doctors`, a doctor page, `/blog`, `/testimonials`, `/gallery`, `/cost`, `/book`, `/faqs`, `/contact`, `/about`, `/anonymous-consultation`, `/symptom-checker`.
+- The homepage condition photos load, the new nav links are present, and the estimator's 2-step flow gives the correct band and disclaimer.
+- The booking handoff shows the estimate and disclaimer; `/cost/price-list.pdf` is served; the sitemap uses the real domain.
+- `/admin` now redirects to the site's own `/admin/login` (the new Supabase form); the old NextAuth route returns 404.
+
 ## Needs my input
 
-Items I couldn't or shouldn't resolve alone. Details are in the sections below.
+Items I couldn't or shouldn't resolve alone. Everything else is done.
 
-1. **Sign in to the admin again.** A QA helper of mine mistakenly submitted the sidebar "Sign Out" form, which ended the admin session. I don't enter passwords on your behalf, so the rest of the admin QA ran on an isolated QA copy with the auth check stubbed (see *How admin QA ran*). No data was affected.
-2. *(more items are appended below as the run continues)*
+1. **Sign in to the admin again.** A QA helper of mine submitted the sidebar "Sign Out" form by mistake, which ended the admin session. I don't enter passwords on your behalf, so the rest of the admin QA ran on an isolated QA copy with the auth check stubbed (see *How admin QA ran*). No data was affected. Once you're signed in, one quick real-login smoke test on the live site (edit something, check it on the public page) would close the loop.
+2. **Production secrets live in an uploaded `.env` file, not in Vercel.** The Vercel project has **no environment variables**. Both the old and new deployments got their database and Supabase configuration because the CLI uploads the project's `.env`, which includes the Supabase service-role key. I kept that mechanism, since I don't enter secrets into dashboards. Recommended:
+   - add the variables under Vercel → Project → Settings → Environment Variables (`DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, SMTP settings);
+   - set `NEXT_PUBLIC_SITE_URL=https://aaravya.vercel.app` (or the real domain);
+   - then add `.env*` to `.vercelignore`.
+   Until then, **every future deploy must pass** `--build-env NEXT_PUBLIC_SITE_URL=https://aaravya.vercel.app`, or the sitemap, structured data and PDF will point to `localhost`.
+3. **Booking emails don't send on the live site.** `.env` has `SMTP_HOST=localhost` (a local mail catcher). Bookings still save and appear in the admin inbox, but neither the coordinator notification nor the patient confirmation email is delivered. This needs real SMTP credentials.
+4. **Review two Cost Estimator wording decisions** (details under *Cost Estimator overhaul*): the disclaimer text I wrote, and whether the tariff figures (30% OT charge, ₹8,000 laser surcharge, ₹3,000/₹5,000 anaesthesia) should be public.
+5. **Review the PDF layout once** (`/cost/price-list.pdf`). The content was verified by text extraction, but I couldn't view it in the browser.
+6. **Post-deploy clean-up, now safe that the old build is gone.** I didn't do these unattended because they're destructive:
+   - drop the empty legacy `CostEstimatorRule` table;
+   - delete the unused `phone`/`whatsapp`/`email` rows in `SiteSetting`.
+7. **Content the client needs to supply.** These tables are intentionally empty:
+   - Testimonials (written quotes), so the "What Our Patients Say" section stays hidden until then;
+   - Health Library articles;
+   - procedure images (the Surgical Techniques cards use condition photos meanwhile);
+   - Location opening hours and Google Business link, which are stored but not shown anywhere yet (say if they should be).
+8. **Optional:** fix the Docker dev file-watching staleness (see *Development-environment notes*).
 
 ---
 

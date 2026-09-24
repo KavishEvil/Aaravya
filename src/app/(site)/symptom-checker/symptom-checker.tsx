@@ -28,7 +28,7 @@ type Step = 0 | 1 | 2 | 3 | 4;
 
 const STEP_LABELS = ["Symptoms", "Duration", "Bleeding", "Pain"];
 
-export function SymptomChecker() {
+export function SymptomChecker({ phone, phoneHref, whatsappHref }: { phone: string; phoneHref: string; whatsappHref: string }) {
   const [step, setStep] = useState<Step>(0);
   const [symptomTypes, setSymptomTypes] = useState<string[]>([]);
   const [duration, setDuration] = useState<SymptomAnswers["duration"] | null>(null);
@@ -224,15 +224,15 @@ export function SymptomChecker() {
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
               {result.level === "URGENT" ? (
-                <Button size="xl" render={<a href="tel:+918733889957" />} className="bg-destructive text-white hover:bg-destructive/90">
-                  <Phone className="mr-1.5" /> Call +91 87338 89957 Now
+                <Button size="xl" render={<a href={phoneHref} />} className="bg-destructive text-white hover:bg-destructive/90">
+                  <Phone className="mr-1.5" /> Call {phone} Now
                 </Button>
               ) : (
                 <Button size="xl" render={<Link href="/book" />} className="bg-brand text-brand-foreground hover:bg-terracotta-700">
                   Book a Consultation
                 </Button>
               )}
-              <Button size="xl" variant="outline" render={<a href="https://wa.me/918733889957" />}>
+              <Button size="xl" variant="outline" render={<a href={whatsappHref} />}>
                 WhatsApp Us
               </Button>
             </div>

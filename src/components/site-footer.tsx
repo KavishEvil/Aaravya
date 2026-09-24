@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { FacebookIcon, InstagramIcon } from "@/components/icons/social";
 import { Wordmark } from "@/components/wordmark";
-import { getConditionsGroupedByCategory, getPrimaryLocation, getSiteSettings } from "@/lib/queries";
+import { getConditionsGroupedByCategory, getContactDetails, getPrimaryLocation, getSiteSettings } from "@/lib/queries";
 
 /**
  * Deliberately dark forest (not the admin's slate/blue --sidebar tokens --
@@ -10,9 +10,10 @@ import { getConditionsGroupedByCategory, getPrimaryLocation, getSiteSettings } f
  * reads as an extension of the brand rather than borrowing admin chrome.
  */
 export async function SiteFooter() {
-  const [location, settings, conditionGroups] = await Promise.all([
+  const [location, settings, contact, conditionGroups] = await Promise.all([
     getPrimaryLocation(),
     getSiteSettings(),
+    getContactDetails(),
     getConditionsGroupedByCategory(),
   ]);
 
@@ -89,24 +90,18 @@ export async function SiteFooter() {
                 <span>{location.address}</span>
               </li>
             )}
-            {settings.phone && (
-              <li className="flex gap-2">
-                <Phone className="mt-0.5 size-4 shrink-0 text-sage-400" />
-                <a href={`tel:${settings.phone}`} className="transition-colors hover:text-white">{settings.phone}</a>
-              </li>
-            )}
-            {settings.whatsapp && (
-              <li className="flex gap-2">
-                <MessageCircle className="mt-0.5 size-4 shrink-0 text-sage-400" />
-                <a href={`https://wa.me/${settings.whatsapp}`} className="transition-colors hover:text-white">WhatsApp Us</a>
-              </li>
-            )}
-            {settings.email && (
-              <li className="flex gap-2">
-                <Mail className="mt-0.5 size-4 shrink-0 text-sage-400" />
-                <a href={`mailto:${settings.email}`} className="transition-colors hover:text-white">{settings.email}</a>
-              </li>
-            )}
+            <li className="flex gap-2">
+              <Phone className="mt-0.5 size-4 shrink-0 text-sage-400" />
+              <a href={contact.phoneHref} className="transition-colors hover:text-white">{contact.phone}</a>
+            </li>
+            <li className="flex gap-2">
+              <MessageCircle className="mt-0.5 size-4 shrink-0 text-sage-400" />
+              <a href={contact.whatsappHref()} className="transition-colors hover:text-white">WhatsApp Us</a>
+            </li>
+            <li className="flex gap-2">
+              <Mail className="mt-0.5 size-4 shrink-0 text-sage-400" />
+              <a href={`mailto:${contact.email}`} className="transition-colors hover:text-white">{contact.email}</a>
+            </li>
           </ul>
         </div>
       </div>

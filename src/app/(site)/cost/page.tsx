@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/site/page-hero";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/reveal";
 import { prisma } from "@/lib/prisma";
-import { INSURANCE_LABELS } from "@/lib/queries";
+import { INSURANCE_LABELS, getContactDetails } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "Cost & Insurance",
@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CostPage() {
+  const contact = await getContactDetails();
   const rules = await prisma.costEstimatorRule.findMany({
     include: { procedure: { select: { name: true } } },
     orderBy: [{ procedure: { name: "asc" } }, { city: "asc" }, { insuranceType: "asc" }],
@@ -49,7 +50,7 @@ export default async function CostPage() {
               your visit — verified figures will appear here as they&rsquo;re
               confirmed by our billing team.
             </p>
-            <Button render={<a href="tel:+918733889957" />} className="mt-5 bg-brand text-brand-foreground hover:bg-terracotta-700">
+            <Button render={<a href={contact.phoneHref} />} className="mt-5 bg-brand text-brand-foreground hover:bg-terracotta-700">
               Call for a Cost Estimate
             </Button>
           </div>

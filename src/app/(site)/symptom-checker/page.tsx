@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import { ShieldCheck } from "lucide-react";
 import { SymptomChecker } from "./symptom-checker";
 import { Reveal } from "@/components/site/reveal";
+import { getContactDetails } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "AI Symptom Checker",
   description: "A private, guided symptom check for anorectal symptoms — not a diagnosis.",
 };
 
-export default function SymptomCheckerPage() {
+export default async function SymptomCheckerPage() {
+  const contact = await getContactDetails();
   return (
     <div className="bg-sage-50/40">
       <div className="mx-auto max-w-xl px-6 py-14 sm:py-16">
@@ -35,7 +37,7 @@ export default function SymptomCheckerPage() {
         </Reveal>
 
         <Reveal delay={0.1} className="mt-8">
-          <SymptomChecker />
+          <SymptomChecker phone={contact.phone} phoneHref={contact.phoneHref} whatsappHref={contact.whatsappHref()} />
         </Reveal>
       </div>
     </div>

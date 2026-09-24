@@ -4,14 +4,14 @@ import { SiteFooter } from "@/components/site-footer";
 import { JsonLd } from "@/components/json-ld";
 import { ChatWidgetLoader } from "@/components/chat-widget-loader";
 import { organizationSchema } from "@/lib/schema";
-import { getPrimaryLocation, getSiteSettings } from "@/lib/queries";
+import { getContactDetails, getPrimaryLocation, getSiteSettings } from "@/lib/queries";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const [settings, location] = await Promise.all([getSiteSettings(), getPrimaryLocation()]);
+  const [settings, contact, location] = await Promise.all([getSiteSettings(), getContactDetails(), getPrimaryLocation()]);
 
   const orgSchema = organizationSchema({
-    phone: settings.phone ?? "+91 87338 89957",
-    email: settings.email ?? "aaravyahospital@gmail.com",
+    phone: contact.phone,
+    email: contact.email,
     address: location?.address ?? "Chandkheda, Ahmedabad",
     facebookUrl: settings.facebook_url,
     instagramUrl: settings.instagram_url,
@@ -46,7 +46,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <SiteHeader />
       <div className="flex-1">{children}</div>
       <SiteFooter />
-      <ChatWidgetLoader phone={settings.phone ?? "+91 87338 89957"} whatsapp={settings.whatsapp ?? "918733889957"} />
+      <ChatWidgetLoader phone={contact.phone} whatsapp={contact.whatsapp} />
     </>
   );
 }

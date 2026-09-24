@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Lock, MessageCircle, ShieldCheck, UserX } from "lucide-react";
-import { ANONYMOUS_CATEGORIES } from "@/content/anonymous-categories";
+import { ANONYMOUS_CATEGORIES, ANONYMOUS_WHATSAPP_MESSAGE } from "@/content/anonymous-categories";
+import { getContactDetails } from "@/lib/queries";
 import { ConfidentialityBadge } from "@/components/confidentiality-badge";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/reveal";
 
@@ -17,7 +18,8 @@ const PROMISES = [
   { icon: ShieldCheck, text: "Nothing is recorded unless you consent, and only the treating doctor sees your request" },
 ];
 
-export default function AnonymousConsultationHub() {
+export default async function AnonymousConsultationHub() {
+  const contact = await getContactDetails();
   return (
     <div className="bg-sage-50/60">
       <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-16">
@@ -65,7 +67,7 @@ export default function AnonymousConsultationHub() {
 
         <Reveal className="mt-12 text-center">
           <a
-            href="https://wa.me/918733889957?text=Hi%2C%20I%27d%20like%20to%20request%20an%20anonymous%20video%20consultation."
+            href={contact.whatsappHref(ANONYMOUS_WHATSAPP_MESSAGE)}
             className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium shadow-soft-sm transition-colors hover:border-forest-300"
           >
             <MessageCircle className="size-4 text-terracotta-600" /> Don&rsquo;t want to pick a category? Message us on WhatsApp

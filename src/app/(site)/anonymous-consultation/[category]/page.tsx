@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2, MessageCircle } from "lucide-react";
-import { ANONYMOUS_CATEGORIES, getAnonymousCategory } from "@/content/anonymous-categories";
+import { ANONYMOUS_CATEGORIES, ANONYMOUS_WHATSAPP_MESSAGE, getAnonymousCategory } from "@/content/anonymous-categories";
+import { getContactDetails } from "@/lib/queries";
 import { ConfidentialityBadge } from "@/components/confidentiality-badge";
 import { Reveal } from "@/components/site/reveal";
 import { AnonymousRequestForm } from "./request-form";
@@ -33,6 +34,7 @@ export default async function AnonymousCategoryPage({
   const { category: slug } = await params;
   const category = getAnonymousCategory(slug);
   if (!category) notFound();
+  const contact = await getContactDetails();
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-12">
@@ -98,7 +100,7 @@ export default async function AnonymousCategoryPage({
         <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:h-fit">
           <AnonymousRequestForm categorySlug={category.slug} offerFemaleDoctor={category.offerFemaleDoctor} />
           <a
-            href="https://wa.me/918733889957?text=Hi%2C%20I%27d%20like%20to%20request%20an%20anonymous%20video%20consultation."
+            href={contact.whatsappHref(ANONYMOUS_WHATSAPP_MESSAGE)}
             className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card p-4 text-sm font-medium shadow-soft-sm transition-colors hover:border-forest-300"
           >
             <MessageCircle className="size-4 text-terracotta-600" /> Prefer WhatsApp? Message us directly

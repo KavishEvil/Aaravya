@@ -13,6 +13,7 @@ import {
   getAllConditionSlugs,
   getConditionBySlug,
   getConditionsGroupedByCategory,
+  getContactDetails,
 } from "@/lib/queries";
 
 type TreatmentOption = { title: string; description: string };
@@ -42,9 +43,10 @@ export default async function ConditionPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [condition, groups] = await Promise.all([
+  const [condition, groups, contact] = await Promise.all([
     getConditionBySlug(slug),
     getConditionsGroupedByCategory(),
+    getContactDetails(),
   ]);
 
   if (!condition) notFound();
@@ -224,7 +226,7 @@ export default async function ConditionPage({
             <Button
               size="xl"
               variant="outline"
-              render={<a href="https://wa.me/918733889957" />}
+              render={<a href={contact.whatsappHref()} />}
               className="border-forest-300 text-forest-800 hover:bg-forest-50"
             >
               WhatsApp Us
@@ -294,8 +296,8 @@ export default async function ConditionPage({
             <p className="mt-1 text-sm text-brand-foreground/85">
               Call us directly for a same-day opinion.
             </p>
-            <a href="tel:+918733889957" className="mt-3 block text-lg font-semibold">
-              +91 87338 89957
+            <a href={contact.phoneHref} className="mt-3 block text-lg font-semibold">
+              {contact.phone}
             </a>
           </div>
         </aside>

@@ -134,7 +134,7 @@ export const getPublishedBlogPostBySlug = cache(async (slug: string) => {
 });
 
 export async function getPrimaryLocation() {
-  return prisma.location.findFirst({ where: { isPrimary: true } });
+  return prisma.location.findFirst({ where: { isPrimary: true }, orderBy: { createdAt: "asc" } });
 }
 
 /**
@@ -149,3 +149,31 @@ export const getSiteSettings = cache(async () => {
   const rows = await prisma.siteSetting.findMany();
   return Object.fromEntries(rows.map((r) => [r.key, r.value])) as Record<string, string>;
 });
+
+const DEFAULT_PHONE = "+91 87338 89957";
+const DEFAULT_WHATSAPP = "918733889957";
+const DEFAULT_EMAIL = "aaravyahospital@gmail.com";
+
+export type ContactDetails = {
+  phone: string;
+  phoneHref: string;
+  whatsapp: string;
+  email: string;
+  whatsappHref: (message?: string) => string;
+};
+
+/** Hospital contact details from Site Settings, with the original numbers as
+ * fallback — the one place public pages should get a phone/WhatsApp link from. */
+export async function getContactDetails(): Promise<ContactDetails> {
+  const settings = await getSiteSettings();
+  const phone = settings.phone?.trim() || DEFAULT_PHONE;
+  const whatsapp = settings.whatsapp?.trim() || DEFAULT_WHATSAPP;
+  return {
+    phone,
+    phoneHref: `tel:${phone.replace(/[^\d+]/g, "")}`,
+    whatsapp,
+    email: settings.email?.trim() || DEFAULT_EMAIL,
+    whatsappHref: (message?: string) =>
+      `https://wa.me/${whatsapp}${message ? `?text=${encodeURIComponent(message)}` : ""}`,
+  };
+}

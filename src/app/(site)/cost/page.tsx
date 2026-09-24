@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/site/page-hero";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/reveal";
 import { prisma } from "@/lib/prisma";
+import { INSURANCE_LABELS } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "Cost & Insurance",
@@ -11,7 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default async function CostPage() {
-  const rules = await prisma.costEstimatorRule.findMany({ include: { procedure: true } });
+  const rules = await prisma.costEstimatorRule.findMany({
+    include: { procedure: { select: { name: true } } },
+    orderBy: [{ procedure: { name: "asc" } }, { city: "asc" }, { insuranceType: "asc" }],
+  });
 
   return (
     <div>
@@ -29,8 +33,9 @@ export default async function CostPage() {
                 <div className="rounded-xl border border-border bg-card p-5 shadow-soft-sm">
                   <p className="font-medium text-card-foreground">{rule.procedure.name}</p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {rule.city} · {rule.insuranceType} · ₹{rule.costMin.toLocaleString("en-IN")}–₹{rule.costMax.toLocaleString("en-IN")}
+                    {rule.city} · {INSURANCE_LABELS[rule.insuranceType]} · ₹{rule.costMin.toLocaleString("en-IN")}–₹{rule.costMax.toLocaleString("en-IN")}
                   </p>
+                  {rule.notes && <p className="mt-2 text-xs text-muted-foreground">{rule.notes}</p>}
                 </div>
               </RevealItem>
             ))}

@@ -3,6 +3,7 @@ import { Pencil } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { AdminListHeader, AdminTable } from "@/components/admin/admin-table";
 import { DeleteButton } from "@/components/admin/delete-button";
+import { INSURANCE_LABELS } from "@/lib/queries";
 import { deleteCostRule } from "./actions";
 
 export default async function AdminCostRulesPage() {
@@ -28,13 +29,13 @@ export default async function AdminCostRulesPage() {
             {r.procedure.name}
           </Link>,
           r.city,
-          r.insuranceType,
+          INSURANCE_LABELS[r.insuranceType],
           `₹${r.costMin.toLocaleString("en-IN")}–₹${r.costMax.toLocaleString("en-IN")}`,
           <div key="actions" className="flex justify-end gap-1">
             <Link href={`/admin/cost-rules/${r.id}`} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground">
               <Pencil className="size-4" />
             </Link>
-            <DeleteButton action={deleteCostRule.bind(null, r.id)} />
+            <DeleteButton action={deleteCostRule.bind(null, r.id)} confirmText={`Delete the ${r.procedure.name} rule?`} />
           </div>,
         ])}
       />

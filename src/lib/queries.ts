@@ -1,6 +1,12 @@
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
-import { ConditionCategory } from "@/generated/prisma";
+import { ConditionCategory, InsuranceType } from "@/generated/prisma";
+
+export const INSURANCE_LABELS: Record<InsuranceType, string> = {
+  CASHLESS: "Cashless insurance",
+  REIMBURSEMENT: "Insurance reimbursement",
+  NONE: "Without insurance",
+};
 
 export const CATEGORY_LABELS: Record<ConditionCategory, string> = {
   PROCTOLOGY: "Proctology",

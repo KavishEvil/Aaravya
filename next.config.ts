@@ -5,6 +5,10 @@ const supabaseHostname = supabaseUrl ? new URL(supabaseUrl).hostname : undefined
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // The price-list PDF route reads these at runtime when it regenerates.
+  outputFileTracingIncludes: {
+    "/cost/price-list.pdf": ["src/assets/fonts/**/*"],
+  },
   images: {
     remotePatterns: supabaseHostname
       ? [{ protocol: "https", hostname: supabaseHostname, pathname: "/storage/v1/object/public/**" }]

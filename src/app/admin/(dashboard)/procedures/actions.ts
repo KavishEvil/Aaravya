@@ -71,11 +71,12 @@ export async function deleteProcedure(id: string): Promise<FormState> {
       where: { id },
       select: { name: true, imageUrl: true, _count: { select: { costEstimatorRules: true } } },
     });
-    // Cost rules reference Procedure with ON DELETE RESTRICT.
+    // Legacy CostEstimatorRule rows (superseded by the Cost Estimator's categories and
+    // treatments, no longer editable) reference Procedure with ON DELETE RESTRICT.
     const rules = existing._count.costEstimatorRules;
     if (rules) {
       throw new AdminFormError(
-        `${existing.name} is used by ${rules} cost estimator rule${rules === 1 ? "" : "s"}. Delete those rules first, then delete this procedure.`
+        `${existing.name} is still referenced by ${rules} legacy cost rule${rules === 1 ? "" : "s"} from the old estimator, so it can't be deleted yet.`
       );
     }
     await prisma.procedure.delete({ where: { id } });

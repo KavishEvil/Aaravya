@@ -64,6 +64,16 @@ enum MediaType {
   VIDEO
 }
 
+/// Standardised website price bands (the ranges themselves live in src/lib/cost-bands.ts).
+enum CostBand {
+  LOWER
+  MODERATE
+  HIGHER
+  ADVANCED
+  CONSULTATION
+  AFTER_CONSULTATION
+}
+
 model Doctor {
   id                   String   @id @default(cuid())
   slug                 String   @unique
@@ -127,6 +137,7 @@ model Condition {
   appointments       Appointment[]
   locationPages      LocationLandingPage[]
   costEstimatorRules CostEstimatorRule[]
+  costCategories     CostCategory[]
   symptomSessions    SymptomCheckSession[]
 
   @@index([category])
@@ -304,6 +315,43 @@ model CostEstimatorRule {
 
   @@index([procedureId])
   @@index([conditionId])
+}
+
+/// Step 1 of the public cost estimator (e.g. "Piles / Hemorrhoids").
+model CostCategory {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  name        String
+  /// Pre-selects this condition when a patient books from the estimator.
+  conditionId String?
+  condition   Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  sortOrder   Int             @default(0)
+  treatments  CostTreatment[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([sortOrder])
+  @@index([conditionId])
+}
+
+/// Step 2 of the public cost estimator: one selectable treatment and its estimate band.
+model CostTreatment {
+  id            String       @id @default(cuid())
+  categoryId    String
+  category      CostCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  name          String
+  medicalName   String?
+  effectiveness String?
+  costLevel     String?
+  discomfort    String?
+  recovery      String?
+  band          CostBand
+  sortOrder     Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([categoryId, name])
+  @@index([categoryId, sortOrder])
 }
 
 model Location {

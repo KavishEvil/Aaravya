@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/site/reveal";
+import { CostDisclaimer } from "@/components/site/cost-disclaimer";
 import { legacyAsset } from "@/lib/assets";
 import { getAllProcedureSlugs, getProcedureBySlug } from "@/lib/queries";
 import { JsonLd } from "@/components/json-ld";
@@ -103,10 +104,15 @@ export default async function ProcedurePage({
       {(procedure.costMin || procedure.costMax) && (
         <div className="mt-6 rounded-xl bg-terracotta-50 p-5 text-terracotta-950">
           <p className="font-heading font-semibold">
-            Starting from ₹{procedure.costMin?.toLocaleString("en-IN")}
-            {procedure.costMax ? ` – ₹${procedure.costMax.toLocaleString("en-IN")}` : ""}
+            Estimated Treatment Cost:{" "}
+            {[procedure.costMin, procedure.costMax]
+              .filter((n): n is number => n !== null)
+              .map((n) => `₹${n.toLocaleString("en-IN")}`)
+              .join("–")}
+            *
           </p>
-          <Link href="/cost" className="text-sm underline">
+          <CostDisclaimer className="mt-2 text-terracotta-900/80" />
+          <Link href="/cost" className="mt-2 inline-block text-sm underline">
             See the full cost estimator
           </Link>
         </div>

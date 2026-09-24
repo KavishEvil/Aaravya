@@ -97,6 +97,19 @@ export async function getMediaByCategory(category: "HAPPY_FACES" | "INTERIOR" | 
   });
 }
 
+/** Cost estimator step 1 → step 2 data, in display order. */
+export const getCostEstimator = cache(async () => {
+  return prisma.costCategory.findMany({
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    include: {
+      condition: { select: { slug: true } },
+      treatments: { orderBy: [{ sortOrder: "asc" }, { name: "asc" }] },
+    },
+  });
+});
+
+export type CostEstimatorData = Awaited<ReturnType<typeof getCostEstimator>>;
+
 /** Approved entries that have something to show (a quote, photo, or video). */
 export async function getApprovedTestimonials(opts: { featuredOnly?: boolean; limit?: number } = {}) {
   return prisma.testimonial.findMany({

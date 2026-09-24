@@ -76,7 +76,7 @@ export function ProcedureForm({
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Cost Min (₹)" htmlFor="costMin">
+        <Field label="Cost Min (₹)" htmlFor="costMin" help="Usually leave empty: public prices come from the Cost Estimator">
           <input id="costMin" name="costMin" type="number" defaultValue={procedure?.costMin ?? ""} className={ADMIN_INPUT_CLASS} />
         </Field>
         <Field label="Cost Max (₹)" htmlFor="costMax">

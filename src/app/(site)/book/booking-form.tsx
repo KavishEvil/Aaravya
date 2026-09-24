@@ -28,11 +28,13 @@ export function BookingForm({
   doctors,
   defaultConditionId,
   defaultDoctorId,
+  defaultNotes,
 }: {
   conditions: { id: string; name: string }[];
   doctors: { id: string; name: string }[];
   defaultConditionId?: string;
   defaultDoctorId?: string;
+  defaultNotes?: string;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message?: string } | null>(null);
@@ -48,6 +50,7 @@ export function BookingForm({
       type: "IN_CLINIC",
       conditionId: defaultConditionId ?? "",
       doctorId: defaultDoctorId ?? "",
+      notes: defaultNotes ?? "",
     },
   });
 

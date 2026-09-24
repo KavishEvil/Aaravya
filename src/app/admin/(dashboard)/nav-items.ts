@@ -23,7 +23,7 @@ export const NAV_ITEMS = [
   { href: "/admin/testimonials", label: "Testimonials", icon: Quote },
   { href: "/admin/gallery", label: "Gallery", icon: Images },
   { href: "/admin/blog", label: "Health Library", icon: Newspaper },
-  { href: "/admin/cost-rules", label: "Cost Estimator", icon: Wallet },
+  { href: "/admin/cost-estimator", label: "Cost Estimator", icon: Wallet },
   { href: "/admin/locations", label: "Locations", icon: MapPin },
   { href: "/admin/settings", label: "Site Settings", icon: Settings },
 ] as const;

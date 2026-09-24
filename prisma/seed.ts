@@ -6,6 +6,7 @@ import doctorsData from "./seed-data/doctors.json";
 import locationData from "./seed-data/location.json";
 import faqsData from "./seed-data/faqs.json";
 import mediaVideosData from "./seed-data/media-videos.json";
+import { seedCostEstimator } from "../src/lib/cost-estimator-seed";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -248,6 +249,9 @@ async function main() {
     });
   }
   console.log(`Created ${mediaItems.length} media items.`);
+
+  console.log("Seeding cost estimator (create-only)...");
+  console.log(`Created ${await seedCostEstimator(prisma)} cost estimator rows.`);
 
   console.log(
     "\nNote: patient testimonial quotes/captions were never captured in the legacy site's markup " +

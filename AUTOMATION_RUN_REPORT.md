@@ -70,6 +70,48 @@ All tables were returned to their baseline and all buckets were left empty after
 
 **Verified.** Changing the Location phone on the production build updated the header, footer, `/contact`, `/cost` and the symptom-checker emergency button. Then it was restored.
 
+---
+
+## Client Changes Round 1
+
+### Cost Estimator overhaul
+
+**Built.**
+- **Data model** (additive migration `20260925140000_add_cost_estimator`):
+  - `CostCategory` (step 1), optionally linked to a condition so booking pre-selects it;
+  - `CostTreatment` (step 2) with patient-friendly name, medical name, effectiveness, cost level, discomfort and recovery;
+  - a `CostBand` enum, so a price can only be one of the four standardised ₹5,000 bands (₹29,999–₹34,999, ₹34,999–₹39,999, ₹39,999–₹44,999, ₹44,999–₹49,999) or "Consultation" / "After consultation". The ranges live only in `src/lib/cost-bands.ts`.
+- **Seed data:** all 7 categories and 21 treatments, transcribed exactly from the client's docx (`src/content/cost-estimator.ts`). The seeding script `scripts/seed-cost-estimator.ts` is create-only, so it's safe to re-run against the live database and never overwrites admin edits.
+- **`/cost`:**
+  - the 2-step selector: category → treatment cards in the docx's card format → "Estimated Treatment Cost: ₹XX,XXX–₹XX,XXX* depending on procedure complexity";
+  - "Book This Treatment", which pre-selects the condition and pre-fills the booking notes;
+  - a full price-list table, the band legend and the brief's estimator note.
+- **Admin:** `/admin/cost-estimator` replaces the old Cost Rules screens. Categories and treatments have full CRUD, with the band chosen from a dropdown of the standard bands only. There's a delete guard for categories that still have treatments, and a case-insensitive duplicate-name check.
+- **Wording:** "Estimated Treatment Cost" is used everywhere a price appears. "Package"/"guaranteed" appear only in the negation "not a guaranteed package price".
+- **Disclaimer:** shown visibly next to every displayed cost: estimator result, cards (asterisk), full list, PDF, booking banner, procedure pages.
+
+**Verified on a production build.**
+- All 21 treatments and bands match the docx.
+- The 2-step flow and the booking handoff work.
+- Editing a band updated `/cost` *and* the PDF.
+- Create → public → delete of a test treatment.
+- The category delete guard and the duplicate-name guard.
+- Data restored to exactly the docx values afterwards.
+
+**Decisions made on my own:**
+- *Disclaimer text.* The brief asked for a "may be additionally applicable" disclaimer but didn't give exact words, so I wrote: "Estimated Treatment Cost only, not a guaranteed package price. OT charges, laser surcharge, anaesthesia, room/nursing, investigations and other applicable services may be additionally applicable. The final estimate is confirmed after clinical evaluation." Every item in it comes from the brief's own note.
+- *Tariff figures shown publicly.* The brief's "Important Estimator Note" figures (30% OT charge, ₹8,000 laser surcharge, ₹3,000/₹5,000 anaesthesia) are shown under "What else may be applicable", reworded for patients but with unchanged numbers. If the client considers these internal, delete that paragraph in `src/content/cost-estimator.ts`.
+- *Booking links for categories.* "Ksharsutra Wing" has no linked condition (it spans several). "Other Anal / Rectal Conditions" links to *Ano-Rectal Diseases*. The other five link to their obvious condition.
+- *The descriptors* (effectiveness, discomfort, recovery) are shown as the brief gives them. The brief itself notes they're proposed website labels, not tariff figures.
+- *The old `CostEstimatorRule` table* (0 rows) is left in place, because the old live build still queries it. It can be dropped in a follow-up migration once the new deployment is confirmed.
+
+### Static PDF price list
+
+- **Where:** `/cost/price-list.pdf`, with download buttons in the `/cost` hero and above the full price list.
+- **How:** generated from the same database rows as the page, using `pdf-lib`. It's `force-static`, so it's prerendered at build time and regenerated after any admin edit. It never goes stale, and that was verified (the edited band appeared in the PDF).
+- **Font:** embedded Inter (SIL OFL 1.1, licence in `src/assets/fonts/OFL.txt`), because the standard PDF fonts have no ₹ glyph. The font files are traced into the standalone and Vercel output via `outputFileTracingIncludes`.
+- **Verified by text extraction:** 2 pages, all 21 rows, ₹ rendering correctly. A visual check wasn't possible, because the browser pane downloads PDFs instead of displaying them. **Please open the PDF once to review the layout.**
+
 ### Development-environment notes (not bugs in the app)
 
 - **Docker file-watch staleness.** This caused the recurring "stale module" problems since Part 2. Next's own docs say Docker Desktop on Windows "can delay or fail to propagate filesystem events" from a Windows-hosted bind mount. The fixes are environment choices: run `npm run dev` on the host, keep the project inside WSL 2, or use Docker Desktop synchronized file shares. Restarting the container is a workaround.

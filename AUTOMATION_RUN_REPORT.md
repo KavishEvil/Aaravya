@@ -6,10 +6,10 @@ Unattended run, 25 Sept 2026, on branch `redeveloping-aaravya`. Covers the rest 
 
 | | |
 |---|---|
-| **Now live** | `dpl_CHbCh1JnfqtJP6c3e6Zddvd99UES` (`aaravya-hhsqe48iu-shubham-mandankas-projects.vercel.app`), aliased to **https://aaravya.vercel.app** |
-| **Previous production** | `dpl_FnNAr45S3igovK3QUGHkZBAinmh3` (`aaravya-9npg9yqcp-…`, 23 Sept). This was the pre-migration NextAuth build: its admin redirected to `http://localhost:3000/admin/login`, so the live admin was unusable. |
-| **Branch** | `redeveloping-aaravya`, pushed to `a886d34` (normal fast-forward pushes, no force). |
-| **Rollback, if ever needed** | `vercel rollback dpl_FnNAr45S3igovK3QUGHkZBAinmh3` |
+| **Now live** | `dpl_4wHMP277vMLMtVSwZgWkbvKazuG7` (`aaravya-gvt2uga7y-shubham-mandankas-projects.vercel.app`), Round 2, commit `4ef958b`, aliased to **https://aaravya.vercel.app** |
+| **Previous production** | `dpl_CHbCh1JnfqtJP6c3e6Zddvd99UES` (`aaravya-hhsqe48iu-…`, Round 1). Before that: `dpl_FnNAr45S3igovK3QUGHkZBAinmh3`, the pre-migration NextAuth build. |
+| **Branch** | `redeveloping-aaravya`, pushed (normal fast-forward pushes, no force). |
+| **Rollback, if ever needed** | `vercel rollback dpl_CHbCh1JnfqtJP6c3e6Zddvd99UES` (Round 1 build). The Round 2 migration only adds a column, so the older build still works against the current database. |
 
 **How it was deployed.**
 - A preview deploy came first, checked page by page via `vercel curl`, then `vercel --prod`.
@@ -236,3 +236,14 @@ All tables were returned to their baseline and all buckets were left empty after
 ### Noticed, not changed
 
 - **Missing doctor, condition and blog slugs return HTTP 200** (with the 404 page and a `noindex` tag), not a real 404. This is pre-existing. The `loading.tsx` files stream those routes, and Next can't change the status once streaming has started. Unknown paths outside those routes return a real 404. I left it alone as out of scope for this round.
+
+### Round 2 deployment
+
+- **Process:** the same as before. A preview (`aaravya-fy5r4myx8-…`) was checked first, then promoted with `vercel deploy --prod`, using `--build-env NEXT_PUBLIC_SITE_URL=https://aaravya.vercel.app`.
+- **Live checks passed (on https://aaravya.vercel.app):**
+  - All 17 public pages, `/admin/login` and `/sitemap.xml` return 200.
+  - `/cost/price-list.pdf` returns 404; `/cost` has 21 price rows and no PDF links.
+  - The homepage and `/doctors` show Deep, then Dipti.
+  - The new photo appears on the homepage, `/doctors` and his profile, and in the JSON-LD `image`, with no references to the old file.
+  - The footer QR code decodes to the Google Maps directions link.
+- **Not touched:** no domain or DNS work was done.

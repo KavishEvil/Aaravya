@@ -6,10 +6,10 @@ Unattended run, 25 Sept 2026, on branch `redeveloping-aaravya`. Covers the rest 
 
 | | |
 |---|---|
-| **Now live** | `dpl_4wHMP277vMLMtVSwZgWkbvKazuG7` (`aaravya-gvt2uga7y-shubham-mandankas-projects.vercel.app`), Round 2, commit `4ef958b`, aliased to **https://aaravya.vercel.app** |
-| **Previous production** | `dpl_CHbCh1JnfqtJP6c3e6Zddvd99UES` (`aaravya-hhsqe48iu-…`, Round 1). Before that: `dpl_FnNAr45S3igovK3QUGHkZBAinmh3`, the pre-migration NextAuth build. |
-| **Branch** | `redeveloping-aaravya`, pushed (normal fast-forward pushes, no force). |
-| **Rollback, if ever needed** | `vercel rollback dpl_CHbCh1JnfqtJP6c3e6Zddvd99UES` (Round 1 build). The Round 2 migration only adds a column, so the older build still works against the current database. |
+| **Now live** | `dpl_G3JAgsDYdD28oJp3JkHwnnfS4Tma` (`aaravya-ajqt54tr3-shubham-mandankas-projects.vercel.app`), Round 2 + soft-404 fix, commit `007aefe`, aliased to **https://aaravya.vercel.app** |
+| **Previous production** | `dpl_4wHMP277vMLMtVSwZgWkbvKazuG7` (`aaravya-gvt2uga7y-…`, Round 2 without the soft-404 fix). Before that: `dpl_CHbCh1JnfqtJP6c3e6Zddvd99UES` (Round 1). |
+| **Branch** | `redeveloping-aaravya` on **github.com/shubhmandanka/Aaravya** (the authoritative repo; ownership was transferred from KavishEvil/Aaravya). |
+| **Rollback, if ever needed** | `vercel rollback dpl_4wHMP277vMLMtVSwZgWkbvKazuG7`. No schema changes since, so it runs against the current database. |
 
 **How it was deployed.**
 - A preview deploy came first, checked page by page via `vercel curl`, then `vercel --prod`.
@@ -261,3 +261,10 @@ All tables were returned to their baseline and all buckets were left empty after
   - The new photo appears on the homepage, `/doctors` and his profile, and in the JSON-LD `image`, with no references to the old file.
   - The footer QR code decodes to the Google Maps directions link.
 - **Not touched:** no domain or DNS work was done.
+- **Soft-404 fix deployment:**
+  - Verified on a preview (`aaravya-pxm8rqfzl-…`), then deployed to production with `vercel deploy --prod` (same `--build-env`).
+  - **Live checks passed:**
+    - missing slugs on all five detail routes return 404, with the site chrome and `noindex`;
+    - unknown paths and `/cost/price-list.pdf` return 404;
+    - all 64 sitemap URLs, `/book`, `/admin/login` and `robots.txt` return 200;
+    - doctor order is unchanged (Deep, then Dipti).

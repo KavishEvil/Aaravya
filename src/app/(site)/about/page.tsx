@@ -62,7 +62,7 @@ export default async function AboutPage() {
                     >
                       {photo ? (
                         <div className="relative size-16 shrink-0 overflow-hidden rounded-full bg-muted">
-                          <Image src={photo} alt={doctor.name} fill sizes="64px" className="object-cover" />
+                          <Image src={photo} alt={doctor.name} fill sizes="64px" className="object-cover object-top" />
                         </div>
                       ) : (
                         <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-forest-100 font-heading text-lg font-semibold text-forest-700">

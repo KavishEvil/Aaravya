@@ -252,7 +252,7 @@ export default async function ConditionPage({
                       alt={condition.reviewedByDoctor.name}
                       fill
                       sizes="48px"
-                      className="object-cover"
+                      className="object-cover object-top"
                     />
                   </div>
                 )}

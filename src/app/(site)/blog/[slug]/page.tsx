@@ -112,7 +112,7 @@ export default async function BlogPostPage({
           <Link href={`/doctors/${reviewer.slug}`} className="mt-2 flex items-center gap-3">
             {reviewerPhoto && (
               <div className="relative size-12 shrink-0 overflow-hidden rounded-full bg-muted">
-                <Image src={reviewerPhoto} alt={reviewer.name} fill sizes="48px" className="object-cover" />
+                <Image src={reviewerPhoto} alt={reviewer.name} fill sizes="48px" className="object-cover object-top" />
               </div>
             )}
             <div>

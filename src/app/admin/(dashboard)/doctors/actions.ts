@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import {
+  AdminFormError,
   adminAction,
   linesToArray,
   requiredString,
@@ -39,11 +40,22 @@ function readDoctorForm(formData: FormData) {
   };
 }
 
+/** Blank means "don't set": new doctors then append after the current last one. */
+function readSortOrder(formData: FormData) {
+  const raw = String(formData.get("sortOrder") ?? "").trim();
+  if (!raw) return null;
+  const n = toIntOrNull(raw);
+  if (n === null || n < 0) throw new AdminFormError("Display order must be a whole number, 0 or more.");
+  return n;
+}
+
 export async function createDoctor(_state: FormState, formData: FormData): Promise<FormState> {
   const result = await adminAction(async () => {
     const data = readDoctorForm(formData);
+    const sortOrder =
+      readSortOrder(formData) ?? ((await prisma.doctor.aggregate({ _max: { sortOrder: true } }))._max.sortOrder ?? 0) + 1;
     await saveWithImage(formData, "photoUrl", "doctors", null, async (photoUrl) => {
-      await prisma.doctor.create({ data: { ...data, photoUrl } });
+      await prisma.doctor.create({ data: { ...data, sortOrder, photoUrl } });
     });
     revalidatePublicSite();
   });
@@ -54,9 +66,10 @@ export async function createDoctor(_state: FormState, formData: FormData): Promi
 export async function updateDoctor(id: string, _state: FormState, formData: FormData): Promise<FormState> {
   const result = await adminAction(async () => {
     const data = readDoctorForm(formData);
+    const sortOrder = readSortOrder(formData);
     const existing = await prisma.doctor.findUniqueOrThrow({ where: { id }, select: { photoUrl: true } });
     await saveWithImage(formData, "photoUrl", "doctors", existing.photoUrl, async (photoUrl) => {
-      await prisma.doctor.update({ where: { id }, data: { ...data, photoUrl } });
+      await prisma.doctor.update({ where: { id }, data: { ...data, ...(sortOrder === null ? {} : { sortOrder }), photoUrl } });
     });
     revalidatePublicSite();
   });

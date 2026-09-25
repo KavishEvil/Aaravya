@@ -93,6 +93,8 @@ model Doctor {
   linkedinUrl          String?
   phone                String?
   isFeatured           Boolean  @default(false)
+  /// Display order wherever doctors are listed (lowest first).
+  sortOrder            Int      @default(0)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -103,6 +105,7 @@ model Doctor {
   appointments       Appointment[]
 
   @@index([isFeatured])
+  @@index([sortOrder])
 }
 
 model Condition {

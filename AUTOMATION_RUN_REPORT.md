@@ -31,10 +31,10 @@ Items I couldn't or shouldn't resolve alone. Everything else is done.
    - add the variables under Vercel → Project → Settings → Environment Variables (`DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, SMTP settings);
    - set `NEXT_PUBLIC_SITE_URL=https://aaravya.vercel.app` (or the real domain);
    - then add `.env*` to `.vercelignore`.
-   Until then, **every future deploy must pass** `--build-env NEXT_PUBLIC_SITE_URL=https://aaravya.vercel.app`, or the sitemap, structured data and PDF will point to `localhost`.
+   Until then, **every future deploy must pass** `--build-env NEXT_PUBLIC_SITE_URL=https://aaravya.vercel.app`, or the sitemap and structured data will point to `localhost`.
 3. **Booking emails don't send on the live site.** `.env` has `SMTP_HOST=localhost` (a local mail catcher). Bookings still save and appear in the admin inbox, but neither the coordinator notification nor the patient confirmation email is delivered. This needs real SMTP credentials.
 4. **Review two Cost Estimator wording decisions** (details under *Cost Estimator overhaul*): the disclaimer text I wrote, and whether the tariff figures (30% OT charge, ₹8,000 laser surcharge, ₹3,000/₹5,000 anaesthesia) should be public.
-5. **Review the PDF layout once** (`/cost/price-list.pdf`). The content was verified by text extraction, but I couldn't view it in the browser.
+5. ~~Review the PDF layout once.~~ No longer applicable: the PDF price list was removed in Round 2 at the client's request.
 6. **Post-deploy clean-up, now safe that the old build is gone.** I didn't do these unattended because they're destructive:
    - drop the empty legacy `CostEstimatorRule` table;
    - delete the unused `phone`/`whatsapp`/`email` rows in `SiteSetting`.
@@ -141,7 +141,7 @@ All tables were returned to their baseline and all buckets were left empty after
 - *The descriptors* (effectiveness, discomfort, recovery) are shown as the brief gives them. The brief itself notes they're proposed website labels, not tariff figures.
 - *The old `CostEstimatorRule` table* (0 rows) is left in place, because the old live build still queries it. It can be dropped in a follow-up migration once the new deployment is confirmed.
 
-### Static PDF price list
+### Static PDF price list (removed in Round 2)
 
 - **Where:** `/cost/price-list.pdf`, with download buttons in the `/cost` hero and above the full price list.
 - **How:** generated from the same database rows as the page, using `pdf-lib`. It's `force-static`, so it's prerendered at build time and regenerated after any admin edit. It never goes stale, and that was verified (the edited band appeared in the PDF).
@@ -166,3 +166,73 @@ All tables were returned to their baseline and all buckets were left empty after
 
 - **Docker file-watch staleness.** This caused the recurring "stale module" problems since Part 2. Next's own docs say Docker Desktop on Windows "can delay or fail to propagate filesystem events" from a Windows-hosted bind mount. The fixes are environment choices: run `npm run dev` on the host, keep the project inside WSL 2, or use Docker Desktop synchronized file shares. Restarting the container is a workaround.
 - **Corrupted `.next/dev/types/routes.d.ts`.** The dev server sometimes leaves this file corrupted, even on a fresh volume. Delete `.next/dev/types/{routes.d.ts,validator.ts}` and run `npx next typegen && npx tsc --noEmit`, the check Next 16 recommends. No volume reset is needed.
+
+---
+
+## Client Changes Round 2
+
+25 Sept 2026. Four items, each verified on a local production build before deploying.
+
+### 1. Fixed doctor order
+
+- **Schema:** new `Doctor.sortOrder` (`Int`, default 0, indexed), added by the additive migration `20260926100000_add_doctor_sort_order`. The migration also backfills the order: Dr. Deep Prajapati = 1, Dr. Dipti Prajapati = 2, and any other doctors 3, 4, … by creation date. The seed sets the same values.
+- **One ordering everywhere:** `DOCTOR_ORDER` in `src/lib/queries.ts` sorts by `sortOrder`, then `createdAt`. It's used by:
+  - the public pages: homepage, `/doctors`, `/about`, booking form;
+  - the admin: the doctors list, which gains an "Order" column, and every doctor dropdown (blog, conditions, procedures, testimonials).
+- **Admin:** a new "Display order (optional)" field on the doctor form. If left blank for a new doctor, it's set to highest + 1, so the doctor is appended. Editing keeps the current position unless the field is changed. Values must be whole numbers, 0 or more.
+- **Verified:**
+  - The homepage and `/doctors` show Deep, then Dipti.
+  - A temporary doctor created via the admin with the order left blank got order 3 and appeared third on both pages.
+  - Changing it to 0 moved it first on both.
+  - It was then deleted via the admin. It had no photo, so there was nothing to clean up in Storage. The DB is back to exactly Deep = 1 and Dipti = 2.
+
+### 2. PDF price list removed
+
+- **What was removed:**
+  - the route `src/app/(site)/cost/price-list.pdf/route.ts`;
+  - the embedded Inter fonts (`src/assets/fonts/`);
+  - the `pdf-lib` and `@pdf-lib/fontkit` dependencies;
+  - the `outputFileTracingIncludes` entry in `next.config.ts`;
+  - both download buttons on `/cost`.
+- **Nothing else to delete:** there were no PDF files in `public/` or in any Storage bucket. (The PDF was generated at build time, never stored.)
+- **Verified:**
+  - `/cost/price-list.pdf` now returns 404.
+  - `/cost` has no PDF references.
+  - The estimator (2-step flow), the 21-row price list, the bands table and the disclaimer are unchanged.
+- **Unrelated, kept:** procedures still have their own optional `downloadablePdfUrl` field.
+
+### 3. Footer location QR code
+
+- **Target (confirmed by you):** Google Maps directions to the primary Location's address, `https://www.google.com/maps/dir/?api=1&destination=<address>`. It's built from the Location record, so an address change in the admin updates the QR code automatically.
+- **How it's made:**
+  - generated server-side with the `qrcode` library (`src/lib/location-qr.ts`), as inline SVG, while the static layout renders;
+  - no third-party service, no client JavaScript;
+  - forest-green modules on white (a phone camera needs the contrast, so it isn't inverted for the dark footer);
+  - error-correction level L, which keeps the ~190-character URL at 49 modules; an on-screen code never gets physically damaged, so L is enough;
+  - shown under "Get in Touch" at 112px, with the caption "Scan for directions / Opens Google Maps";
+  - the tile is also a link, for desktop visitors.
+- **Verified:**
+  - The rendered SVG decodes (jsQR) to exactly the footer link.
+  - Opening that link in a browser resolves Google Maps to the **Aaravya Hospital** business listing, with routes.
+- **Optional improvement:** the destination is the address text, and Google matches it to the listing. For a pin that can never mis-resolve, send me the listing's Place ID and I'll add `destination_place_id`.
+
+### 4. Dr. Deep Prajapati's new photo
+
+- **Uploaded** through the same `saveWithImage()` path the admin's "Update Doctor" uses (validation, resize to WebP, EXIF stripped, Storage upload, then removal of the previous Storage file after the DB write). This ran via the new reusable script `scripts/replace-doctor-photo.ts`, because the browser pane can't attach local files to an upload field.
+- **New file:** `doctors/6402454a-fa12-4712-a048-b1998c0e877b.webp` (1024×1536, 60 KB). It's now the only file in the `doctors` bucket.
+- **The old photo wasn't in Storage.** It was the static file carried over from the legacy site (`assets/img/team/dr-deep.png`), so there was no Storage object to delete. The static file stays in `public/legacy-assets/`, because the seed data still references it.
+- **Framing:** the new photo is portrait, and the doctor photo slots are square or round. Every doctor photo therefore now anchors to the top (`object-top`), so the head is never cropped. This affects six places:
+  - the homepage cards;
+  - `/doctors`;
+  - the doctor profile page;
+  - `/about`;
+  - the reviewer avatars on condition pages and blog articles.
+  Dr. Dipti's photo is unaffected.
+- **Verified:**
+  - The new photo renders, well framed, on the homepage, `/doctors`, `/doctors/dr-deep-prajapati` and `/about`.
+  - None of those pages reference the old file any more.
+  - The Physician JSON-LD `image` is the absolute Supabase URL.
+
+### Noticed, not changed
+
+- **Missing doctor, condition and blog slugs return HTTP 200** (with the 404 page and a `noindex` tag), not a real 404. This is pre-existing. The `loading.tsx` files stream those routes, and Next can't change the status once streaming has started. Unknown paths outside those routes return a real 404. I left it alone as out of scope for this round.

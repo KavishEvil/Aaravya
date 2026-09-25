@@ -199,7 +199,7 @@ export default async function Home() {
                         alt={doctor.name}
                         fill
                         sizes="144px"
-                        className="object-cover"
+                        className="object-cover object-top"
                       />
                     </div>
                   )}

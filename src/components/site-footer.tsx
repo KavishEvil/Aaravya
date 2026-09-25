@@ -3,6 +3,7 @@ import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { FacebookIcon, InstagramIcon } from "@/components/icons/social";
 import { Wordmark } from "@/components/wordmark";
 import { getConditionsGroupedByCategory, getContactDetails, getPrimaryLocation, getSiteSettings } from "@/lib/queries";
+import { directionsUrl, qrSvg } from "@/lib/location-qr";
 
 /**
  * Deliberately dark forest (not the admin's slate/blue --sidebar tokens --
@@ -18,6 +19,8 @@ export async function SiteFooter() {
   ]);
 
   const proctology = conditionGroups.find((g) => g.category === "PROCTOLOGY");
+  const directions = location?.address ? directionsUrl(location.address) : null;
+  const directionsQr = directions ? await qrSvg(directions) : null;
 
   return (
     <footer className="border-t border-forest-950 bg-forest-900 text-white">
@@ -103,6 +106,27 @@ export async function SiteFooter() {
               <a href={`mailto:${contact.email}`} className="transition-colors hover:text-white">{contact.email}</a>
             </li>
           </ul>
+          {directions && directionsQr && (
+            <a
+              href={directions}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group mt-5 inline-flex items-center gap-3 rounded-xl bg-white/5 p-2 pr-4 ring-1 ring-white/10 transition-colors hover:bg-white/10"
+            >
+              <span
+                role="img"
+                aria-label="QR code: Google Maps directions to Aaravya Hospital"
+                className="block size-28 shrink-0 overflow-hidden rounded-lg bg-white [&>svg]:size-full"
+                dangerouslySetInnerHTML={{ __html: directionsQr }}
+              />
+              <span className="text-sm">
+                <span className="block font-heading font-semibold text-white">Scan for directions</span>
+                <span className="block text-xs text-white/60 transition-colors group-hover:text-white/80">
+                  Opens Google Maps
+                </span>
+              </span>
+            </a>
+          )}
         </div>
       </div>
       <div className="border-t border-white/10 px-6 py-4 text-center text-xs text-white/55">

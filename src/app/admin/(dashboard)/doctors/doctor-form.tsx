@@ -118,6 +118,22 @@ export function DoctorForm({
         </Field>
       </div>
 
+      <Field
+        label="Display order (optional)"
+        htmlFor="sortOrder"
+        help={doctor ? "Lower shows first. Leave as is to keep the current position." : "Lower shows first. Leave blank to add after the existing doctors."}
+      >
+        <input
+          id="sortOrder"
+          name="sortOrder"
+          type="number"
+          min={0}
+          step={1}
+          defaultValue={doctor?.sortOrder ?? ""}
+          className={`${ADMIN_INPUT_CLASS} max-w-40`}
+        />
+      </Field>
+
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="isFeatured" defaultChecked={doctor?.isFeatured ?? true} className="size-4 rounded border-input" />
         Featured (shown on homepage)

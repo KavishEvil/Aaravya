@@ -3,6 +3,7 @@ import { PageHero } from "@/components/site/page-hero";
 import { CostDisclaimer } from "@/components/site/cost-disclaimer";
 import { prisma } from "@/lib/prisma";
 import { formatBand, isPricedBand } from "@/lib/cost-bands";
+import { DOCTOR_ORDER } from "@/lib/queries";
 import { BookingForm } from "./booking-form";
 
 export const metadata: Metadata = {
@@ -19,7 +20,7 @@ export default async function BookPage({
 
   const [conditions, doctors, defaultCondition, defaultDoctor, treatment] = await Promise.all([
     prisma.condition.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
-    prisma.doctor.findMany({ select: { id: true, name: true } }),
+    prisma.doctor.findMany({ select: { id: true, name: true }, orderBy: DOCTOR_ORDER }),
     conditionSlug
       ? prisma.condition.findUnique({ where: { slug: conditionSlug }, select: { id: true } })
       : null,

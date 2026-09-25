@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Download, Phone } from "lucide-react";
+import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/site/page-hero";
 import { Reveal } from "@/components/site/reveal";
@@ -52,13 +52,6 @@ export default async function CostPage() {
       >
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Button
-            nativeButton={false}
-            render={<a href="/cost/price-list.pdf" download="Aaravya-Hospital-Price-List.pdf" />}
-            className="bg-forest-700 text-white hover:bg-forest-800"
-          >
-            <Download className="mr-1.5 size-4" /> Download Full Price List (PDF)
-          </Button>
-          <Button
             variant="outline"
             nativeButton={false}
             render={<a href={contact.phoneHref} />}
@@ -83,18 +76,9 @@ export default async function CostPage() {
 
         {estimatorData.length > 0 && (
           <Reveal as="section" className="mt-16">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <h2 id="price-list" className="font-heading text-2xl font-semibold text-forest-900">
-                Full Price List
-              </h2>
-              <a
-                href="/cost/price-list.pdf"
-                download="Aaravya-Hospital-Price-List.pdf"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-forest-700 hover:underline"
-              >
-                <Download className="size-4" /> Download PDF
-              </a>
-            </div>
+            <h2 id="price-list" className="font-heading text-2xl font-semibold text-forest-900">
+              Full Price List
+            </h2>
             <div className="mt-5 flex flex-col gap-6">
               {categories
                 .filter((c) => c.treatments.length > 0)

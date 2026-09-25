@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
-import { ConditionCategory, InsuranceType } from "@/generated/prisma";
+import { ConditionCategory, InsuranceType, type Prisma } from "@/generated/prisma";
 
 export const INSURANCE_LABELS: Record<InsuranceType, string> = {
   CASHLESS: "Cashless insurance",
@@ -58,8 +58,11 @@ export const getConditionBySlug = cache(async (slug: string) => {
   });
 });
 
+/** The one display order for doctors everywhere they're listed. */
+export const DOCTOR_ORDER = [{ sortOrder: "asc" }, { createdAt: "asc" }] satisfies Prisma.DoctorOrderByWithRelationInput[];
+
 export async function getAllDoctors() {
-  return prisma.doctor.findMany({ orderBy: { isFeatured: "desc" } });
+  return prisma.doctor.findMany({ orderBy: DOCTOR_ORDER });
 }
 
 /** See `getConditionBySlug` — same generateMetadata + page double-fetch fix. */

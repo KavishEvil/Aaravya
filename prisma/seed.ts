@@ -79,9 +79,11 @@ async function main() {
 
   console.log(`Seeding ${doctorsData.length} doctors...`);
   const doctorIdBySlug = new Map<string, string>();
-  for (const doctor of doctorsData as Array<Record<string, unknown>>) {
+  for (const [i, raw] of (doctorsData as Array<Record<string, unknown>>).entries()) {
+    // doctors.json is in display order: Dr. Deep Prajapati, then Dr. Dipti Prajapati.
+    const doctor = { ...raw, sortOrder: i + 1 };
     const created = await prisma.doctor.upsert({
-      where: { slug: doctor.slug as string },
+      where: { slug: raw.slug as string },
       update: doctor as never,
       create: doctor as never,
     });

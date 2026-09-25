@@ -56,7 +56,7 @@ export default async function DoctorPage({
         <div className="mx-auto grid max-w-5xl gap-8 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-[220px_1fr] lg:items-center">
           {photo ? (
             <div className="relative mx-auto aspect-square w-40 overflow-hidden rounded-2xl bg-muted shadow-soft-md ring-4 ring-white sm:w-48 lg:mx-0 lg:w-full">
-              <Image src={photo} alt={doctor.name} fill sizes="220px" className="object-cover" priority />
+              <Image src={photo} alt={doctor.name} fill sizes="220px" className="object-cover object-top" priority />
             </div>
           ) : (
             <div className="mx-auto flex aspect-square w-40 items-center justify-center rounded-2xl bg-forest-100 font-heading text-5xl font-semibold text-forest-700 ring-4 ring-white sm:w-48 lg:mx-0 lg:w-full">

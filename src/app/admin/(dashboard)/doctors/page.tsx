@@ -3,20 +3,22 @@ import { Pencil } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { AdminListHeader, AdminTable, BooleanBadge } from "@/components/admin/admin-table";
 import { DeleteButton } from "@/components/admin/delete-button";
+import { DOCTOR_ORDER } from "@/lib/queries";
 import { deleteDoctor } from "./actions";
 
 export default async function AdminDoctorsPage() {
   const doctors = await prisma.doctor.findMany({
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, designation: true, isFeatured: true },
+    orderBy: DOCTOR_ORDER,
+    select: { id: true, name: true, designation: true, isFeatured: true, sortOrder: true },
   });
 
   return (
     <div>
       <AdminListHeader title="Doctors" newHref="/admin/doctors/new" newLabel="New Doctor" />
       <AdminTable
-        columns={["Name", "Designation", "Featured", ""]}
+        columns={["Order", "Name", "Designation", "Featured", ""]}
         rows={doctors.map((d) => [
+          <span key="order" className="text-muted-foreground">{d.sortOrder}</span>,
           <Link key="name" href={`/admin/doctors/${d.id}`} className="font-medium hover:text-primary">
             {d.name}
           </Link>,

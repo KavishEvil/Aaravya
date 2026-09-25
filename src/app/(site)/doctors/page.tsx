@@ -35,7 +35,7 @@ export default async function DoctorsPage() {
                 >
                   {photo ? (
                     <div className="relative size-32 overflow-hidden rounded-full bg-muted ring-4 ring-forest-50">
-                      <Image src={photo} alt={doctor.name} fill sizes="128px" className="object-cover" />
+                      <Image src={photo} alt={doctor.name} fill sizes="128px" className="object-cover object-top" />
                     </div>
                   ) : (
                     <div className="flex size-32 items-center justify-center rounded-full bg-forest-100 font-heading text-3xl font-semibold text-forest-700 ring-4 ring-forest-50">

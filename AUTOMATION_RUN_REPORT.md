@@ -233,9 +233,23 @@ All tables were returned to their baseline and all buckets were left empty after
   - None of those pages reference the old file any more.
   - The Physician JSON-LD `image` is the absolute Supabase URL.
 
-### Noticed, not changed
+### Soft 404s fixed (follow-up, before the custom domain)
 
-- **Missing doctor, condition and blog slugs return HTTP 200** (with the 404 page and a `noindex` tag), not a real 404. This is pre-existing. The `loading.tsx` files stream those routes, and Next can't change the status once streaming has started. Unknown paths outside those routes return a real 404. I left it alone as out of scope for this round.
+- **The problem:** a missing doctor, condition, blog, procedure or anonymous-consultation page returned HTTP **200** (with the 404 page and a `noindex` tag) instead of a real 404.
+  - The cause: `src/app/(site)/loading.tsx` and each listing's `loading.tsx` wrapped the detail routes in a Suspense boundary. The response started streaming before the page could call `notFound()`, and once streaming has started the status can't change (see Next's `loading.md`, *Status Codes*).
+- **The fix:** check that the record exists before anything streams, while keeping every loading skeleton.
+  - The homepage and each listing page (with its `loading.tsx`) moved into a route group: `(site)/(home)/`, `blog/(index)/`, `conditions/(index)/`, `doctors/(index)/`, `treatments/(index)/`, `anonymous-consultation/(index)/`. URLs are unchanged, and the listing skeletons now wrap only their own page.
+  - Each detail route has a new `[slug]/layout.tsx` (`[category]` for anonymous consultation) that calls `notFound()` if the record doesn't exist. It sits above that route's own `loading.tsx`.
+  - It uses the same `cache()`'d lookup as the page, so there's no extra database query. It runs only when a page is built or revalidated, never on each request.
+- **Rejected alternatives:**
+  - *Checking in the proxy:* a database hit on every request, which undoes static serving.
+  - *`dynamicParams = false`:* a doctor, condition or procedure added in the admin would 404 until the next redeploy.
+- **Verified on a production build:**
+  - Missing slugs on all five detail routes return **404**, with the site header, footer and `noindex`. Unknown top-level paths return a 404 as before.
+  - All 67 existing public pages and all 64 sitemap URLs return 200.
+  - The build route table is unchanged: listings static, detail pages prerendered, and existing pages still served from cache (`x-nextjs-cache: HIT`).
+  - **Admin lifecycle:** a slug requested before it existed returned 404, and that 404 was cached. After creating a doctor with that slug in the admin, it returned 200 and appeared on `/doctors`. After deleting the doctor, it returned 404 again.
+  - Client-side navigation (no full reload) works across the moved routes: home, doctor page, condition page, blog listing, and back home.
 
 ### Round 2 deployment
 
